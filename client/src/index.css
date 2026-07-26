@@ -1,0 +1,40 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1e1e2f;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 70px);
+  gap: 8px;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.tile {
+  width: 70px;
+  height: 70px;
+  background: #2d2d44;
+  border-radius: 12px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 35px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.tile:hover {
+  transform: scale(1.08);
+}
