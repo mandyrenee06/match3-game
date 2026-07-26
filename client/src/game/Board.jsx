@@ -4,22 +4,18 @@ import useBoard from "./hooks/useBoard";
 function Board() {
   const {
     board,
-    selectedTile,
-    setSelectedTile,
+    selectedIndex,
+    handleTileClick,
   } = useBoard();
-
-  function handleTileClick(tile) {
-    setSelectedTile(tile);
-  }
 
   return (
     <div className="board">
-      {board.map((tile) => (
+      {board.map((tile, index) => (
         <Tile
           key={tile.id}
           tile={tile}
-          selected={selectedTile?.id === tile.id}
-          onClick={() => handleTileClick(tile)}
+          selected={selectedIndex === index}
+          onClick={() => handleTileClick(index)}
         />
       ))}
     </div>
