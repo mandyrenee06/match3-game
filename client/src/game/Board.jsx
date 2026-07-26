@@ -1,32 +1,25 @@
 import Tile from "./Tile";
-
-const icons = [
-  "💵",
-  "🪙",
-  "💰",
-  "💎",
-  "⭐",
-  "🏦",
-];
+import useBoard from "./hooks/useBoard";
 
 function Board() {
-  // Create an empty array to hold the board
-  const board = [];
+  const {
+    board,
+    selectedTile,
+    setSelectedTile,
+  } = useBoard();
 
-  // Generate 64 random tiles
-  for (let i = 0; i < 64; i++) {
-    const randomIcon =
-      icons[Math.floor(Math.random() * icons.length)];
-
-    board.push(randomIcon);
+  function handleTileClick(tile) {
+    setSelectedTile(tile);
   }
 
   return (
     <div className="board">
-      {board.map((icon, index) => (
+      {board.map((tile) => (
         <Tile
-          key={index}
-          icon={icon}
+          key={tile.id}
+          tile={tile}
+          selected={selectedTile?.id === tile.id}
+          onClick={() => handleTileClick(tile)}
         />
       ))}
     </div>

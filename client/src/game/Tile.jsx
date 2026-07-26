@@ -1,7 +1,10 @@
-function Tile({ icon }) {
+function Tile({ tile, selected, onClick }) {
   return (
-    <div className="tile">
-      {icon}
+    <div
+      className={`tile ${selected ? "selected" : ""}`}
+      onClick={onClick}
+    >
+      {tile.type}
     </div>
   );
 }
