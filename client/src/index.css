@@ -14,14 +14,26 @@ body {
   display: grid;
   grid-template-columns: repeat(8, 70px);
   gap: 8px;
+
   justify-content: center;
+
   margin-top: 40px;
+  padding: 20px;
+
+  background: #24243d;
+  border-radius: 15px;
+
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tile {
   width: 70px;
   height: 70px;
-  background: #2d2d44;
+
+  background: #38385c;
+
   border-radius: 12px;
 
   display: flex;
@@ -30,9 +42,11 @@ body {
 
   font-size: 35px;
 
+  transition: .2s;
+
   cursor: pointer;
 
-  transition: 0.2s;
+  user-select: none;
 }
 
 .tile:hover {
