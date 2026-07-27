@@ -10,9 +10,11 @@ function findHorizontalMatches(board) {
       const third = board[index + 2];
 
       if (
-        first.type === second.type &&
-        second.type === third.type
+          first.type &&
+          first.type === second.type &&
+          second.type === third.type
       ) {
+
         matches.push(index, index + 1, index + 2);
       }
     }
@@ -33,8 +35,9 @@ function findVerticalMatches(board) {
       const third = board[index + 16];
 
       if (
-        first.type === second.type &&
-        second.type === third.type
+          first.type &&
+          first.type === second.type &&
+          second.type === third.type
       ) {
         matches.push(index, index + 8, index + 16);
       }
