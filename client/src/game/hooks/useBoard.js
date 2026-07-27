@@ -2,6 +2,7 @@ import { useState } from "react";
 import { generateBoard } from "../../utils/generateBoard";
 import { swapTiles } from "../../utils/swapTiles";
 import { isAdjacent } from "../../utils/isAdjacent";
+import { findMatches } from "../../utils/findMatches";
 
 function useBoard() {
   const [board, setBoard] = useState(() => generateBoard());
@@ -24,10 +25,16 @@ function useBoard() {
     return;
   }
 
-  const newBoard =
-    swapTiles(board, selectedIndex, index);
+  const newBoard = swapTiles(board, selectedIndex, index);
 
+  const matches = findMatches(newBoard);
+
+  if (matches.length > 0) {
   setBoard(newBoard);
+  } else {
+  console.log("Invalid move!");
+  }
+
   setSelectedIndex(null);
 }
 
@@ -37,5 +44,4 @@ function useBoard() {
     handleTileClick,
 };
 }
-
 export default useBoard;
