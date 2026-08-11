@@ -2,21 +2,33 @@ function findHorizontalMatches(board) {
   const matches = [];
 
   for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 6; col++) {
+    let col = 0;
+
+    while (col < 8) {
       const index = row * 8 + col;
+      const type = board[index]?.type;
 
-      const first = board[index];
-      const second = board[index + 1];
-      const third = board[index + 2];
-
-      if (
-          first.type &&
-          first.type === second.type &&
-          second.type === third.type
-      ) {
-
-        matches.push(index, index + 1, index + 2);
+      if (!type) {
+        col++;
+        continue;
       }
+
+      let runLength = 1;
+
+      while (
+        col + runLength < 8 &&
+        board[index + runLength]?.type === type
+      ) {
+        runLength++;
+      }
+
+      if (runLength >= 3) {
+        for (let i = 0; i < runLength; i++) {
+          matches.push(index + i);
+        }
+      }
+
+      col += runLength;
     }
   }
 
@@ -26,21 +38,34 @@ function findHorizontalMatches(board) {
 function findVerticalMatches(board) {
   const matches = [];
 
-  for (let row = 0; row < 6; row++) {
-    for (let col = 0; col < 8; col++) {
+  for (let col = 0; col < 8; col++) {
+    let row = 0;
+
+    while (row < 8) {
       const index = row * 8 + col;
+      const type = board[index]?.type;
 
-      const first = board[index];
-      const second = board[index + 8];
-      const third = board[index + 16];
-
-      if (
-          first.type &&
-          first.type === second.type &&
-          second.type === third.type
-      ) {
-        matches.push(index, index + 8, index + 16);
+      if (!type) {
+        row++;
+        continue;
       }
+
+      let runLength = 1;
+
+      while (
+        row + runLength < 8 &&
+        board[index + runLength * 8]?.type === type
+      ) {
+        runLength++;
+      }
+
+      if (runLength >= 3) {
+        for (let i = 0; i < runLength; i++) {
+          matches.push(index + i * 8);
+        }
+      }
+
+      row += runLength;
     }
   }
 

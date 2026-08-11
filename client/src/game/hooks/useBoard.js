@@ -7,6 +7,7 @@ import { removeMatches } from "../../utils/removeMatches";
 import { applyGravity } from "../../utils/applyGravity";
 import { refillBoard } from "../../utils/refillBoard";
 import { calculateScore } from "../../utils/calculateScore";
+import { activateSpecialTile } from "../../utils/activateSpecialTile";
 
 function useBoard() {
   const [board, setBoard] = useState(() => generateBoard());
@@ -31,29 +32,51 @@ function processMove(firstIndex, secondIndex) {
     return false;
   }
 
-  // Try the swap
   const swappedBoard = swapTiles(board, firstIndex, secondIndex);
 
-  // Check if the swap created a match
-  let matches = findMatches(swappedBoard);
+  // Check if either swapped tile is a bomb
+  const firstTile = swappedBoard[firstIndex];
+  const secondTile = swappedBoard[secondIndex];
 
-  // Reject invalid moves
-  if (matches.length === 0) {
+  const bombActivated =
+    firstTile.special === "bomb" ||
+    secondTile.special === "bomb";
+
+  let currentBoard = swappedBoard;
+
+  // Activate bomb if one of the swapped tiles is a bomb
+  if (firstTile.special === "bomb") {
+    currentBoard = activateSpecialTile(currentBoard, firstIndex);
+  }
+
+  if (secondTile.special === "bomb") {
+    currentBoard = activateSpecialTile(currentBoard, secondIndex);
+  }
+
+  let matches = findMatches(currentBoard);
+
+  // Reject invalid moves only if there was
+  // no normal match AND no bomb activation
+  if (matches.length === 0 && !bombActivated) {
     console.log("Invalid move");
     return false;
   }
 
-  // Start with the swapped board
-  let currentBoard = swappedBoard;
-
   // Safety counter to prevent infinite loops
   let cascadeCount = 0;
-
   let totalPoints = 0;
 
-  // Keep processing until there are no more matches
-  while (matches.length > 0 && cascadeCount < 20) {
+  // If a bomb was activated, the bomb already created
+  // empty spaces, so gravity and refill must happen first.
+  if (bombActivated) {
+    currentBoard = applyGravity(currentBoard);
+    currentBoard = refillBoard(currentBoard);
 
+    matches = findMatches(currentBoard);
+  }
+
+  // Continue processing normal matches and cascades
+  while (matches.length > 0 && cascadeCount < 20) {
     const points = calculateScore(matches);
 
     totalPoints += points;
