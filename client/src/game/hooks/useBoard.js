@@ -9,19 +9,40 @@ import { refillBoard } from "../../utils/refillBoard";
 import { calculateScore } from "../../utils/calculateScore";
 import { activateSpecialTile } from "../../utils/activateSpecialTile";
 import { activateLineTile } from "../../utils/activateLineTile";
+import { levels } from "../../config/levels";
+import { hasPossibleMove } from "../../utils/hasPossibleMove";
 
 function useBoard() {
   const [board, setBoard] = useState(() => generateBoard());
   const [selectedIndex, setSelectedIndex] = useState(null);
-
   const [score, setScore] = useState(0);
-  const [movesLeft, setMovesLeft] = useState(20);
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [targetScore, setTargetScore] = useState(5000);
+
+  const levelConfig = levels[currentLevel - 1];
+
+  const [movesLeft, setMovesLeft] = useState(levelConfig.moves);
+  const [targetScore, setTargetScore] = useState(levelConfig.targetScore);
 
   const [gameStatus, setGameStatus] = useState("playing");
-  
+
+function loadLevel(levelNumber) {
+  const config = levels[levelNumber - 1];
+
+  if (!config) {
+    return false;
+  }
+
+  setCurrentLevel(levelNumber);
+  setBoard(generateBoard());
+  setSelectedIndex(null);
+  setScore(0);
+  setMovesLeft(config.moves);
+  setTargetScore(config.targetScore);
+  setGameStatus("playing");
+
+  return true;
+}
 
 function processMove(firstIndex, secondIndex) {
 
@@ -120,6 +141,11 @@ function processMove(firstIndex, secondIndex) {
     cascadeCount++;
   }
 
+  if (!hasPossibleMove(currentBoard)) {
+    console.log("No possible moves. Generating a new board.");
+    currentBoard = generateBoard();
+  }
+
   const newScore = score + totalPoints;
 
   const remainingMoves = movesLeft - 1;
@@ -140,22 +166,11 @@ function processMove(firstIndex, secondIndex) {
 }
 
   function resetGame() {
-    setBoard(generateBoard());
-    setSelectedIndex(null);
-    setScore(0);
-    setMovesLeft(20);
-    setGameStatus("playing");
+    loadLevel(currentLevel);
   }
 
   function nextLevel() {
-    setCurrentLevel((prev) => prev + 1);
-    setTargetScore((prev) => prev + 2500);
-
-    setBoard(generateBoard());
-    setSelectedIndex(null);
-    setScore(0);
-    setMovesLeft(20);
-    setGameStatus("playing");
+    return loadLevel(currentLevel + 1);
   }
 
   function exitGame() {
@@ -201,6 +216,7 @@ function processMove(firstIndex, secondIndex) {
     resetGame,
     nextLevel,
     exitGame,
+    loadLevel,
 };
 }
 export default useBoard;
