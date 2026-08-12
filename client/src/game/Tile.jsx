@@ -4,7 +4,11 @@ function Tile({ tile, selected, onClick }) {
       className={`tile ${selected ? "selected" : ""}`}
       onClick={onClick}
     >
-      {tile.special === "bomb" ? "💣" : tile.type ?? ""}
+      {tile.special === "bomb"
+        ? "💣"
+        : tile.special === "line"
+          ? "⚡"
+          : tile.type ?? ""}
     </div>
   );
 }

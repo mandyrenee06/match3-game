@@ -8,6 +8,7 @@ import { applyGravity } from "../../utils/applyGravity";
 import { refillBoard } from "../../utils/refillBoard";
 import { calculateScore } from "../../utils/calculateScore";
 import { activateSpecialTile } from "../../utils/activateSpecialTile";
+import { activateLineTile } from "../../utils/activateLineTile";
 
 function useBoard() {
   const [board, setBoard] = useState(() => generateBoard());
@@ -42,33 +43,60 @@ function processMove(firstIndex, secondIndex) {
     firstTile.special === "bomb" ||
     secondTile.special === "bomb";
 
+  const lineActivated =
+    firstTile.special === "line" ||
+    secondTile.special === "line";
+
+  const specialActivated = bombActivated || lineActivated;
+
   let currentBoard = swappedBoard;
 
-  // Activate bomb if one of the swapped tiles is a bomb
+  let specialScore = 0;
+
   if (firstTile.special === "bomb") {
-    currentBoard = activateSpecialTile(currentBoard, firstIndex);
+    const result = activateSpecialTile(currentBoard, firstIndex);
+
+    currentBoard = result.board;
+    specialScore += calculateScore(result.clearedIndexes);
   }
 
   if (secondTile.special === "bomb") {
-    currentBoard = activateSpecialTile(currentBoard, secondIndex);
+    const result = activateSpecialTile(currentBoard, secondIndex);
+
+    currentBoard = result.board;
+    specialScore += calculateScore(result.clearedIndexes);
+  }
+
+  if (firstTile.special === "line") {
+    const result = activateLineTile(currentBoard, firstIndex);
+
+    currentBoard = result.board;
+    specialScore += calculateScore(result.clearedIndexes);
+  }
+
+  if (secondTile.special === "line") {
+    const result = activateLineTile(currentBoard, secondIndex);
+
+    currentBoard = result.board;
+    specialScore += calculateScore(result.clearedIndexes);
   }
 
   let matches = findMatches(currentBoard);
 
   // Reject invalid moves only if there was
-  // no normal match AND no bomb activation
-  if (matches.length === 0 && !bombActivated) {
+  // no normal match AND no special tile activation
+  if (matches.length === 0 && !specialActivated) {
     console.log("Invalid move");
     return false;
   }
 
   // Safety counter to prevent infinite loops
   let cascadeCount = 0;
-  let totalPoints = 0;
+  let totalPoints = specialScore;
 
   // If a bomb was activated, the bomb already created
   // empty spaces, so gravity and refill must happen first.
-  if (bombActivated) {
+  if (specialActivated) {
     currentBoard = applyGravity(currentBoard);
     currentBoard = refillBoard(currentBoard);
 

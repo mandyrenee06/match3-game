@@ -1,5 +1,6 @@
 export function activateSpecialTile(board, specialIndex) {
   const newBoard = [...board];
+  const clearedIndexes = [];
 
   const row = Math.floor(specialIndex / 8);
   const col = specialIndex % 8;
@@ -9,7 +10,6 @@ export function activateSpecialTile(board, specialIndex) {
       const targetRow = row + rowOffset;
       const targetCol = col + colOffset;
 
-      // Stay inside the 8x8 board
       if (
         targetRow >= 0 &&
         targetRow < 8 &&
@@ -17,6 +17,8 @@ export function activateSpecialTile(board, specialIndex) {
         targetCol < 8
       ) {
         const targetIndex = targetRow * 8 + targetCol;
+
+        clearedIndexes.push(targetIndex);
 
         newBoard[targetIndex] = {
           ...newBoard[targetIndex],
@@ -27,5 +29,8 @@ export function activateSpecialTile(board, specialIndex) {
     }
   }
 
-  return newBoard;
+  return {
+    board: newBoard,
+    clearedIndexes,
+  };
 }

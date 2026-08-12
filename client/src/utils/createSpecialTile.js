@@ -6,14 +6,21 @@ export function createSpecialTile(board, matches) {
   const specialIndex = matches[0];
 
   const newBoard = board.map((tile, index) => {
-    if (index === specialIndex) {
+    if (index !== specialIndex) {
+      return tile;
+    }
+
+    if (matches.length >= 5) {
       return {
         ...tile,
-        special: "bomb",
+        special: "line",
       };
     }
 
-    return tile;
+    return {
+      ...tile,
+      special: "bomb",
+    };
   });
 
   return newBoard;
