@@ -40,15 +40,6 @@ export function usdToCoins(usd) {
 // ========================================
 // LOCAL CURRENCY → COINS
 // ========================================
-//
-// Example:
-//
-// $1 = 100 coins
-//
-// If $1 = KSh 129:
-//
-// KSh 129 → $1 → 100 coins
-//
 
 export function localCurrencyToCoins(
   amount,

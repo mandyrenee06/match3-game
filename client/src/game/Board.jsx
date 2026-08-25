@@ -6,6 +6,7 @@ import GameHeader from "../components/GameHeader";
 import GameWallet from "../components/GameWallet";
 import TopUpGameWallet from "../components/TopUpGameWallet";
 import StartGameModal from "../components/StartGameModal";
+import WithdrawalModal from "../components/WithdrawalModal";
 
 function Board() {
   const {
@@ -19,64 +20,74 @@ function Board() {
     gameStatus,
     cashBalance,
     coinBalance,
-    handleTopUp,
     handleTileClick,
     resetGame,
     startGame,
     nextLevel,
     exitGame,
   } = useBoard();
+
   const [showTopUp, setShowTopUp] = useState(false);
+  const [showWithdrawal, setShowWithdrawal] = useState(false);
 
   return (
-  <div className="game-container">
-    <GameHeader
-      score={score}
-      movesLeft={movesLeft}
-      currentLevel={currentLevel}
-      targetScore={targetScore}
-    />
+    <div className="game-container">
 
-    <GameWallet
-      cashBalance={cashBalance}
-      coinBalance={coinBalance}
-      onTopUp={() => setShowTopUp(true)}
-    />
-
-    <TopUpGameWallet
-      isOpen={showTopUp}
-      onClose={() => setShowTopUp(false)}
-    />
-
-    {gameStatus === "start" && !showTopUp && (
-      <StartGameModal
-        coinBalance={coinBalance}
-        onStart={startGame}
-        onTopUp={() => setShowTopUp(true)}
+      <GameHeader
+        score={score}
+        movesLeft={movesLeft}
+        currentLevel={currentLevel}
+        targetScore={targetScore}
       />
-    )}
 
-    <div className="board">
-      {board.map((tile, index) => (
-        <Tile
-          key={tile.id}
-          tile={tile}
-          selected={selectedIndex === index}
-          onClick={() => handleTileClick(index)}
+      <GameWallet
+        cashBalance={cashBalance}
+        coinBalance={coinBalance}
+        onTopUp={() => setShowTopUp(true)}
+        onWithdraw={() => setShowWithdrawal(true)}
+      />
+
+      <TopUpGameWallet
+        isOpen={showTopUp}
+        onClose={() => setShowTopUp(false)}
+      />
+
+      <WithdrawalModal
+        isOpen={showWithdrawal}
+        onClose={() => setShowWithdrawal(false)}
+        coinBalance={coinBalance}
+      />
+
+      {gameStatus === "start" && !showTopUp && !showWithdrawal && (
+        <StartGameModal
+          coinBalance={coinBalance}
+          onStart={startGame}
+          onTopUp={() => setShowTopUp(true)}
         />
-      ))}
-    </div>
+      )}
 
-    <GameOverModal
-      gameStatus={gameStatus}
-      score={score}
-      reward={reward}
-      onRestart={resetGame}
-      onNextLevel={nextLevel}
-      onExit={exitGame}
-    />
-  </div>
-);
+      <div className="board">
+        {board.map((tile, index) => (
+          <Tile
+            key={tile.id}
+            tile={tile}
+            selected={selectedIndex === index}
+            onClick={() => handleTileClick(index)}
+          />
+        ))}
+      </div>
+
+      <GameOverModal
+        gameStatus={gameStatus}
+        score={score}
+        reward={reward}
+        onRestart={resetGame}
+        onNextLevel={nextLevel}
+        onExit={exitGame}
+      />
+
+    </div>
+  );
 }
 
 export default Board;

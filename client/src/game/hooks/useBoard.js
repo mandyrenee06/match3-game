@@ -57,7 +57,7 @@ function useBoard() {
     useState(0);
 
   const [coinBalance, setCoinBalance] =
-    useState(10000);
+    useState(savedCoins);
 
   const [reward, setReward] = 
     useState(0);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { paymentProcedures } from "../config/paymentProcedures";
 import {
+  currencies,
   usdToCoins,
   localCurrencyToUsd,
 } from "../config/currencies";
@@ -20,9 +21,7 @@ function TopUpGameWallet({ isOpen, onClose }) {
   // Later this will come from the real user's Nehxify account.
   const [accountBalance, setAccountBalance] = useState(1000);
 
-  // Account currency
-  // Later this will come from the user's profile/country.
-  const [accountCurrency] = useState("USD");
+  const [accountCurrency, setAccountCurrency] = useState("");
 
   const [transferAmount, setTransferAmount] = useState("");
 
@@ -41,9 +40,19 @@ function TopUpGameWallet({ isOpen, onClose }) {
   // --------------------------------
 
   function handleCountryChange(event) {
-    setCountry(event.target.value);
+    const selectedCountryCode = event.target.value;
+
+    setCountry(selectedCountryCode);
     setPaymentMethod("");
     setAmount("");
+
+    const selected = paymentProcedures[selectedCountryCode];
+
+    if (selected?.currency) {
+      setAccountCurrency(selected.currency);
+    } else {
+      setAccountCurrency("");
+    }
   }
 
   // --------------------------------
@@ -314,6 +323,10 @@ function TopUpGameWallet({ isOpen, onClose }) {
 
                 <option value="Tanzania">
                   🇹🇿 Tanzania
+                </option>
+
+                <option value="Cote d'Ivoire">
+                  🇨🇮 Côte d'Ivoire
                 </option>
 
                 <option value="Malawi">
@@ -666,13 +679,9 @@ function TopUpGameWallet({ isOpen, onClose }) {
             </span>
 
             <strong>
-              {accountCurrency === "USD"
-                ? "$"
-                : ""}
-              {accountBalance.toFixed(2)}{" "}
-              {accountCurrency !== "USD"
-                ? accountCurrency
-                : ""}
+              {accountCurrency
+                ? `${currencies[accountCurrency]?.symbol || accountCurrency} ${accountBalance.toFixed(2)}`
+                : "0.00"}
             </strong>
 
           </div>
@@ -692,7 +701,11 @@ function TopUpGameWallet({ isOpen, onClose }) {
                 type="number"
                 min="1"
                 step="0.01"
-                placeholder={`Enter amount in ${accountCurrency}`}
+                placeholder={
+                  accountCurrency
+                    ? `Enter amount in ${currencies[accountCurrency]?.code}`
+                    : "Select your country first"
+                }
                 value={transferAmount}
                 onChange={(event) =>
                   setTransferAmount(

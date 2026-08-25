@@ -4,6 +4,8 @@
 
 // 100 coins = $1
 export const COINS_PER_USD = 100;
+
+
 // ========================================
 // SUPPORTED CURRENCIES
 // ========================================
@@ -13,7 +15,7 @@ export const currencies = {
     code: "USD",
     name: "US Dollar",
     symbol: "$",
-    flag: "🇺🇸",
+    flag: "🌍",
   },
 
   KES: {
@@ -37,32 +39,11 @@ export const currencies = {
     flag: "🇹🇿",
   },
 
-  MWK: {
-    code: "MWK",
-    name: "Malawian Kwacha",
-    symbol: "MK",
-    flag: "🇲🇼",
-  },
-
-  ZMW: {
-    code: "ZMW",
-    name: "Zambian Kwacha",
-    symbol: "ZK",
-    flag: "🇿🇲",
-  },
-
-  BWP: {
-    code: "BWP",
-    name: "Botswana Pula",
-    symbol: "P",
-    flag: "🇧🇼",
-  },
-
-  ZAR: {
-    code: "ZAR",
-    name: "South African Rand",
-    symbol: "R",
-    flag: "🇿🇦",
+  RWF: {
+    code: "RWF",
+    name: "Rwandan Franc",
+    symbol: "FRw",
+    flag: "🇷🇼",
   },
 
   GHS: {
@@ -79,18 +60,46 @@ export const currencies = {
     flag: "🇳🇬",
   },
 
-  RWF: {
-    code: "RWF",
-    name: "Rwandan Franc",
-    symbol: "FRw",
-    flag: "🇷🇼",
+  ZMW: {
+    code: "ZMW",
+    name: "Zambian Kwacha",
+    symbol: "ZK",
+    flag: "🇿🇲",
   },
 
-  BIF: {
-    code: "BIF",
-    name: "Burundian Franc",
-    symbol: "FBu",
-    flag: "🇧🇮",
+  XOF: {
+    code: "XOF",
+    name: "West African CFA Franc",
+    symbol: "CFA",
+    flag: "🇨🇮",
+  },
+
+  BWP: {
+    code: "BWP",
+    name: "Botswana Pula",
+    symbol: "P",
+    flag: "🇧🇼",
+  },
+
+  ZAR: {
+    code: "ZAR",
+    name: "South African Rand",
+    symbol: "R",
+    flag: "🇿🇦",
+  },
+
+  XAF: {
+    code: "XAF",
+    name: "Central African CFA Franc",
+    symbol: "FCFA",
+    flag: "🇨🇲",
+  },
+
+  MWK: {
+    code: "MWK",
+    name: "Malawian Kwacha",
+    symbol: "MK",
+    flag: "🇲🇼",
   },
 
   ETB: {
@@ -99,73 +108,59 @@ export const currencies = {
     symbol: "Br",
     flag: "🇪🇹",
   },
-
-  XAF: {
-    code: "XAF",
-    name: "Central African CFA Franc",
-    symbol: "FCFA",
-    flag: "🌍",
-  },
-
-  PKR: {
-    code: "PKR",
-    name: "Pakistani Rupee",
-    symbol: "₨",
-    flag: "🇵🇰",
-  },
-
-  INR: {
-    code: "INR",
-    name: "Indian Rupee",
-    symbol: "₹",
-    flag: "🇮🇳",
-  },
 };
 
 
 // ========================================
 // EXCHANGE RATES
 // ========================================
-//
-// These are temporary/static rates for the
-// game prototype.
-//
-// They represent:
-//
-// 1 USD = X local currency
-//
-// IMPORTANT:
-// For the real production system, these
-// should eventually come from the backend
-// rather than being hard-coded in React.
-//
 
 export const exchangeRates = {
   USD: 1,
 
-  KES: 129,
-  UGX: 3500,
-  TZS: 2500,
-  MWK: 1750,
-  ZMW: 24,
-  BWP: 14,
-  ZAR: 18,
-  GHS: 11,
-  NGN: 1500,
-  RWF: 1450,
-  BIF: 3000,
-  ETB: 140,
-  XAF: 560,
-  PKR: 280,
-  INR: 88,
+  KES: 129.4,
+  UGX: 3720,
+  TZS: 2640,
+  RWF: 1475,
+  GHS: 12.9,
+  NGN: 1352,
+  ZMW: 19.0,
+  XOF: 610,
+  BWP: 13.4,
+  ZAR: 16.0,
+  XAF: 610,
+  MWK: 1735,
+  ETB: 150,
 };
+
+// ========================================
+// CURRENCIES THAT DO NOT USE DECIMAL DISPLAY
+// ========================================
+
+export const NO_DECIMAL_CURRENCIES = [
+  "KES",
+  "UGX",
+  "GHS",
+  "TZS",
+  "NGN",
+  "XAF",
+  "XOF",
+  "MWK",
+  "RWF",
+  "ZMW",
+  "BWP",
+  "ZAR",
+];
 
 
 // ========================================
 // LOCAL CURRENCY → USD
 // ========================================
 
-export function localCurrencyToUsd(amount, currencyCode) {
+export function localCurrencyToUsd(
+  amount,
+  currencyCode
+) {
   const rate = exchangeRates[currencyCode];
 
   if (!rate) {
@@ -177,20 +172,24 @@ export function localCurrencyToUsd(amount, currencyCode) {
   return Number(amount) / rate;
 }
 
-// =========================
+
+// ========================================
 // USD → COINS
-// =========================
+// ========================================
 
 export const usdToCoins = (usd) => {
-  return Math.floor(usd * COINS_PER_USD);
+  return Math.floor(
+    Number(usd) * COINS_PER_USD
+  );
 };
 
-// =========================
+
+// ========================================
 // COINS → USD
-// =========================
+// ========================================
 
 export const coinsToUsd = (coins) => {
-  return coins / COINS_PER_USD;
+  return Number(coins) / COINS_PER_USD;
 };
 
 
@@ -198,7 +197,10 @@ export const coinsToUsd = (coins) => {
 // USD → LOCAL CURRENCY
 // ========================================
 
-export function usdToLocalCurrency(amount, currencyCode) {
+export function usdToLocalCurrency(
+  amount,
+  currencyCode
+) {
   const rate = exchangeRates[currencyCode];
 
   if (!rate) {
@@ -208,4 +210,4 @@ export function usdToLocalCurrency(amount, currencyCode) {
   }
 
   return Number(amount) * rate;
-}
+};
