@@ -1,66 +1,71 @@
 function GameOverModal({
   gameStatus,
   score,
+  reward,
   onRestart,
   onNextLevel,
   onExit,
 }) {
-  if (gameStatus === "playing") {
+  // Don't show the modal while the game is still being played
+  if (gameStatus !== "won" && gameStatus !== "lost") {
     return null;
   }
 
-  if (gameStatus === "exit") {
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h1>👋</h1>
-
-        <h2>Thanks for Playing!</h2>
-
-        <p>You've exited the game.</p>
-
-        <button onClick={onRestart}>
-          Play Again
-        </button>
-      </div>
-    </div>
-  );
-}
-
-  const isWinner = gameStatus === "won";
+  const playerWon = gameStatus === "won";
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h1>{isWinner ? "🎉🎉🎉" : "😢"}</h1>
+    <div className="game-over-overlay">
+      <div className="game-over-modal">
+
+        <div className="game-over-icon">
+          {playerWon ? "🏆" : "😔"}
+        </div>
 
         <h2>
-          {isWinner ? "Congratulations!" : "Game Over"}
+          {playerWon ? "Level Complete!" : "Game Over"}
         </h2>
 
-        <p>
-          {isWinner
-            ? "You completed the level!"
-            : "You ran out of moves."}
+        <p className="game-over-message">
+          {playerWon
+            ? "Amazing! You completed this level."
+            : "You ran out of moves before reaching the target score."}
         </p>
 
-        <h3>Final Score: {score}</h3>
-
-        <div className="modal-buttons">
-          {isWinner ? (
-            <button onClick={onNextLevel}>
-              ➡️ Next Level
-            </button>
-          ) : (
-            <button onClick={onRestart}>
-              🔄 Try Again
-            </button>
-          )}
-
-            <button onClick={onExit}>
-             🚪 Exit
-            </button>
+        {playerWon && (
+          <div className="game-reward">
+            <span>🪙 Level Reward</span>
+            <strong>+{reward.toLocaleString()} Coins</strong>
           </div>
+        )}
+
+        <div className="game-over-score">
+          <span>⭐ Your Score</span>
+          <strong>{score.toLocaleString()}</strong>
+        </div>
+
+        {playerWon ? (
+          <button
+            className="next-level-button"
+            onClick={onNextLevel}
+          >
+            ➡️ Next Level
+          </button>
+        ) : (
+          <button
+            className="try-again-button"
+            onClick={onRestart}
+          >
+            🔄 Try Again
+          </button>
+        )}
+
+        <button
+          className="exit-game-button"
+          onClick={onExit}
+        >
+          🚪 Exit Game
+        </button>
+
       </div>
     </div>
   );

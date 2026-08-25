@@ -13,196 +13,632 @@ import { levels } from "../../config/levels";
 import { hasPossibleMove } from "../../utils/hasPossibleMove";
 
 function useBoard() {
-  const [board, setBoard] = useState(() => generateBoard());
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const [score, setScore] = useState(0);
 
-  const [currentLevel, setCurrentLevel] = useState(1);
+  // --------------------------------
+  // LOAD SAVED PLAYER PROGRESS
+  // --------------------------------
 
-  const levelConfig = levels[currentLevel - 1];
+  const savedGame = JSON.parse(
+    localStorage.getItem("nehxifyGameProgress")
+  );
 
-  const [movesLeft, setMovesLeft] = useState(levelConfig.moves);
-  const [targetScore, setTargetScore] = useState(levelConfig.targetScore);
+  const savedHighestLevel =
+    savedGame?.highestLevel || 1;
 
-  const [gameStatus, setGameStatus] = useState("playing");
+  const savedCoins =
+    savedGame?.coinBalance !== undefined
+      ? savedGame.coinBalance
+      : 1000;
 
-function loadLevel(levelNumber) {
-  const config = levels[levelNumber - 1];
+  // Make sure the saved level actually exists
+  const startingLevel =
+    Math.min(savedHighestLevel, levels.length);
 
-  if (!config) {
-    return false;
+  const startingLevelConfig =
+    levels[startingLevel - 1];
+
+  // --------------------------------
+  // GAME STATE
+  // --------------------------------
+
+  const [board, setBoard] =
+    useState(() => generateBoard());
+
+  const [selectedIndex, setSelectedIndex] =
+    useState(null);
+
+  const [score, setScore] =
+    useState(0);
+
+  const [currency, setCurrency] = 
+    useState("KES");
+
+  const [cashBalance, setCashBalance] = 
+    useState(0);
+
+  const [coinBalance, setCoinBalance] =
+    useState(10000);
+
+  const [reward, setReward] = 
+    useState(0);
+
+  // This is the player's unlocked/highest level
+  const [highestLevel, setHighestLevel] =
+    useState(startingLevel);
+
+  // This is the level currently being played
+  const [currentLevel, setCurrentLevel] =
+    useState(startingLevel);
+
+  const [movesLeft, setMovesLeft] =
+    useState(startingLevelConfig.moves);
+
+  const [targetScore, setTargetScore] =
+    useState(startingLevelConfig.targetScore);
+
+  const [specialTilesActivated, setSpecialTilesActivated] =
+    useState(0);
+
+  const [tilesCleared, setTilesCleared] =
+    useState(0);
+
+  // IMPORTANT:
+  // We start with "start" so the player
+  // must pay 100 coins before playing.
+  const [gameStatus, setGameStatus] =
+    useState("start");
+
+  // --------------------------------
+  // SAVE PLAYER PROGRESS
+  // --------------------------------
+
+  function savePlayerProgress(
+    level,
+    coins
+  ) {
+    localStorage.setItem(
+      "nehxifyGameProgress",
+      JSON.stringify({
+        highestLevel: level,
+        coinBalance: coins,
+      })
+    );
   }
 
-  setCurrentLevel(levelNumber);
-  setBoard(generateBoard());
-  setSelectedIndex(null);
-  setScore(0);
-  setMovesLeft(config.moves);
-  setTargetScore(config.targetScore);
-  setGameStatus("playing");
+  // --------------------------------
+  // START A FRESH ATTEMPT
+  // --------------------------------
 
-  return true;
-}
+  function startLevel(levelNumber) {
 
-function processMove(firstIndex, secondIndex) {
+    const config =
+      levels[levelNumber - 1];
 
-  if (gameStatus !== "playing") {
-    return false;
+    if (!config) {
+      return false;
+    }
+
+    setCurrentLevel(levelNumber);
+
+    // NEW BOARD
+    setBoard(generateBoard());
+
+    // RESET ATTEMPT
+    setSelectedIndex(null);
+    setScore(0);
+    setMovesLeft(config.moves);
+    setTargetScore(config.targetScore);
+
+    // RESET OBJECTIVE PROGRESS
+    setSpecialTilesActivated(0);
+    setTilesCleared(0);
+
+    setGameStatus("playing");
+
+    return true;
   }
 
-  if (movesLeft <= 0) {
-    return false;
+  // --------------------------------
+  // PROCESS MOVE
+  // --------------------------------
+
+  function processMove(firstIndex, secondIndex) {
+
+    if (gameStatus !== "playing") {
+      return false;
+    }
+
+    if (movesLeft <= 0) {
+      return false;
+    }
+
+    const swappedBoard =
+      swapTiles(
+        board,
+        firstIndex,
+        secondIndex
+      );
+
+    const firstTile =
+      swappedBoard[firstIndex];
+
+    const secondTile =
+      swappedBoard[secondIndex];
+
+    const bombActivated =
+      firstTile.special === "bomb" ||
+      secondTile.special === "bomb";
+
+    const lineActivated =
+      firstTile.special === "line" ||
+      secondTile.special === "line";
+
+    const specialActivated =
+      bombActivated || lineActivated;
+
+    let currentBoard =
+      swappedBoard;
+
+    let specialScore = 0;
+
+    let specialActivatedCount = 0;
+
+    let clearedTilesThisMove = 0;
+
+    // --------------------------------
+    // BOMB
+    // --------------------------------
+
+    if (firstTile.special === "bomb") {
+
+      const result =
+        activateSpecialTile(
+          currentBoard,
+          firstIndex
+        );
+
+      currentBoard = result.board;
+
+      specialScore +=
+        calculateScore(
+          result.clearedIndexes
+        );
+
+      specialActivatedCount++;
+    }
+
+    if (secondTile.special === "bomb") {
+
+      const result =
+        activateSpecialTile(
+          currentBoard,
+          secondIndex
+        );
+
+      currentBoard = result.board;
+
+      specialScore +=
+        calculateScore(
+          result.clearedIndexes
+        );
+
+      specialActivatedCount++;
+    }
+
+    // --------------------------------
+    // LINE TILE
+    // --------------------------------
+
+    if (firstTile.special === "line") {
+
+      const result =
+        activateLineTile(
+          currentBoard,
+          firstIndex
+        );
+
+      currentBoard = result.board;
+
+      specialScore +=
+        calculateScore(
+          result.clearedIndexes
+        );
+
+      specialActivatedCount++;
+    }
+
+    if (secondTile.special === "line") {
+
+      const result =
+        activateLineTile(
+          currentBoard,
+          secondIndex
+        );
+
+      currentBoard = result.board;
+
+      specialScore +=
+        calculateScore(
+          result.clearedIndexes
+        );
+
+      specialActivatedCount++;
+    }
+
+    // --------------------------------
+    // FIND MATCHES
+    // --------------------------------
+
+    let matches =
+      findMatches(currentBoard);
+
+    // Invalid move
+    if (
+      matches.length === 0 &&
+      !specialActivated
+    ) {
+      console.log("Invalid move");
+      return false;
+    }
+
+    let cascadeCount = 0;
+
+    let totalPoints =
+      specialScore;
+
+    // --------------------------------
+    // SPECIAL TILE REFILL
+    // --------------------------------
+
+    if (specialActivated) {
+
+      currentBoard =
+        applyGravity(currentBoard);
+
+      currentBoard =
+        refillBoard(currentBoard);
+
+      matches =
+        findMatches(currentBoard);
+    }
+
+    // --------------------------------
+    // CASCADES
+    // --------------------------------
+
+    while (
+      matches.length > 0 &&
+      cascadeCount < 20
+    ) {
+
+      const points =
+        calculateScore(matches);
+
+      totalPoints += points;
+
+      clearedTilesThisMove +=
+        matches.length;
+
+      currentBoard =
+        removeMatches(
+          currentBoard,
+          matches
+        );
+
+      currentBoard =
+        applyGravity(currentBoard);
+
+      currentBoard =
+        refillBoard(currentBoard);
+
+      matches =
+        findMatches(currentBoard);
+
+      cascadeCount++;
+    }
+
+    // --------------------------------
+    // NO POSSIBLE MOVE
+    // --------------------------------
+
+    if (!hasPossibleMove(currentBoard)) {
+
+      console.log(
+        "No possible moves. Generating new board."
+      );
+
+      currentBoard =
+        generateBoard();
+    }
+
+    // --------------------------------
+    // UPDATE STATE
+    // --------------------------------
+
+    const newScore =
+      score + totalPoints;
+
+    const newSpecialTilesActivated =
+      specialTilesActivated +
+      specialActivatedCount;
+
+    const newTilesCleared =
+      tilesCleared +
+      clearedTilesThisMove;
+
+    const remainingMoves =
+      movesLeft - 1;
+
+    // --------------------------------
+    // CHECK OBJECTIVES
+    // --------------------------------
+
+    const currentObjectives =
+      levels[currentLevel - 1].objectives;
+
+    const objectivesComplete =
+      currentObjectives.every(
+        (objective) => {
+
+          if (objective.type === "score") {
+            return (
+              newScore >= objective.target
+            );
+          }
+
+          if (objective.type === "special") {
+            return (
+              newSpecialTilesActivated >=
+              objective.target
+            );
+          }
+
+          if (objective.type === "clear") {
+            return (
+              newTilesCleared >=
+              objective.target
+            );
+          }
+
+          return false;
+        }
+      );
+
+    // --------------------------------
+    // DETERMINE GAME STATUS
+    // --------------------------------
+
+    let newStatus = "playing";
+    let earnedReward = 0;
+
+    if (objectivesComplete) {
+      newStatus = "won";
+
+      earnedReward =
+        levels[currentLevel - 1].reward || 0;
+    } else if (remainingMoves <= 0) {
+      newStatus = "lost";
+    }
+
+    // --------------------------------
+    // APPLY STATE
+    // --------------------------------
+    
+    const newCoinBalance =
+      coinBalance + earnedReward;
+
+    setScore(newScore);
+
+    setMovesLeft(remainingMoves);
+
+    setSpecialTilesActivated(
+      newSpecialTilesActivated
+    );
+
+    setTilesCleared(
+      newTilesCleared
+    );
+
+    setReward(earnedReward);
+
+    setCoinBalance(newCoinBalance);
+
+    setGameStatus(newStatus);
+
+    setBoard(currentBoard);
+
+    return true;
   }
 
-  const swappedBoard = swapTiles(board, firstIndex, secondIndex);
+  // --------------------------------
+  // START GAME
+  // --------------------------------
 
-  // Check if either swapped tile is a bomb
-  const firstTile = swappedBoard[firstIndex];
-  const secondTile = swappedBoard[secondIndex];
+  function startGame() {
 
-  const bombActivated =
-    firstTile.special === "bomb" ||
-    secondTile.special === "bomb";
+    if (coinBalance < 100) {
 
-  const lineActivated =
-    firstTile.special === "line" ||
-    secondTile.special === "line";
+      alert(
+        "You need at least 100 coins to play."
+      );
 
-  const specialActivated = bombActivated || lineActivated;
+      return false;
+    }
 
-  let currentBoard = swappedBoard;
+    const newCoinBalance =
+      coinBalance - 100;
 
-  let specialScore = 0;
+    setCoinBalance(
+      newCoinBalance
+    );
 
-  if (firstTile.special === "bomb") {
-    const result = activateSpecialTile(currentBoard, firstIndex);
+    // IMPORTANT:
+    // Start at the player's highest
+    // unlocked level, NOT level 1.
+    startLevel(highestLevel);
 
-    currentBoard = result.board;
-    specialScore += calculateScore(result.clearedIndexes);
+    // Save only persistent information
+    savePlayerProgress(
+      highestLevel,
+      newCoinBalance
+    );
+
+    return true;
   }
 
-  if (secondTile.special === "bomb") {
-    const result = activateSpecialTile(currentBoard, secondIndex);
-
-    currentBoard = result.board;
-    specialScore += calculateScore(result.clearedIndexes);
-  }
-
-  if (firstTile.special === "line") {
-    const result = activateLineTile(currentBoard, firstIndex);
-
-    currentBoard = result.board;
-    specialScore += calculateScore(result.clearedIndexes);
-  }
-
-  if (secondTile.special === "line") {
-    const result = activateLineTile(currentBoard, secondIndex);
-
-    currentBoard = result.board;
-    specialScore += calculateScore(result.clearedIndexes);
-  }
-
-  let matches = findMatches(currentBoard);
-
-  // Reject invalid moves only if there was
-  // no normal match AND no special tile activation
-  if (matches.length === 0 && !specialActivated) {
-    console.log("Invalid move");
-    return false;
-  }
-
-  // Safety counter to prevent infinite loops
-  let cascadeCount = 0;
-  let totalPoints = specialScore;
-
-  // If a bomb was activated, the bomb already created
-  // empty spaces, so gravity and refill must happen first.
-  if (specialActivated) {
-    currentBoard = applyGravity(currentBoard);
-    currentBoard = refillBoard(currentBoard);
-
-    matches = findMatches(currentBoard);
-  }
-
-  // Continue processing normal matches and cascades
-  while (matches.length > 0 && cascadeCount < 20) {
-    const points = calculateScore(matches);
-
-    totalPoints += points;
-
-    currentBoard = removeMatches(currentBoard, matches);
-
-    currentBoard = applyGravity(currentBoard);
-
-    currentBoard = refillBoard(currentBoard);
-
-    matches = findMatches(currentBoard);
-
-    cascadeCount++;
-  }
-
-  if (!hasPossibleMove(currentBoard)) {
-    console.log("No possible moves. Generating a new board.");
-    currentBoard = generateBoard();
-  }
-
-  const newScore = score + totalPoints;
-
-  const remainingMoves = movesLeft - 1;
-
-  setScore(newScore);
-
-  setMovesLeft(remainingMoves);
-
-  if (newScore >= targetScore) {
-    setGameStatus("won");
-  } else if (remainingMoves === 0) {
-    setGameStatus("lost");
-  }
-
-  setBoard(currentBoard);
-
-  return true;
-}
+  // --------------------------------
+  // TRY AGAIN
+  // --------------------------------
 
   function resetGame() {
-    loadLevel(currentLevel);
+
+    if (coinBalance < 100) {
+
+      alert(
+        "You don't have enough coins to try again."
+      );
+
+      return;
+    }
+
+    const newCoinBalance =
+      coinBalance - 100;
+
+    setCoinBalance(
+      newCoinBalance
+    );
+
+    // Same level, completely fresh attempt
+    startLevel(currentLevel);
+
+    savePlayerProgress(
+      highestLevel,
+      newCoinBalance
+    );
   }
+
+  // --------------------------------
+  // NEXT LEVEL
+  // --------------------------------
 
   function nextLevel() {
-    return loadLevel(currentLevel + 1);
+
+    const nextLevelNumber =
+      currentLevel + 1;
+
+    if (
+      nextLevelNumber >
+      levels.length
+    ) {
+
+      console.log(
+        "Congratulations! You completed all levels."
+      );
+
+      return false;
+    }
+
+    // Unlock next level
+    setHighestLevel(
+      nextLevelNumber
+    );
+
+    // Start next level fresh
+    startLevel(
+      nextLevelNumber
+    );
+
+    // Save the newly unlocked level
+    savePlayerProgress(
+      nextLevelNumber,
+      coinBalance
+    );
+
+    return true;
   }
+
+  // --------------------------------
+  // EXIT GAME
+  // --------------------------------
 
   function exitGame() {
-  setGameStatus("exit");
+
+    // IMPORTANT:
+    // We DO NOT erase progress.
+    // We only leave the game.
+
+    setGameStatus("exit");
+
+    savePlayerProgress(
+      highestLevel,
+      coinBalance
+    );
   }
+
+  // --------------------------------
+  // TOP UP
+  // --------------------------------
+
+  function handleTopUp() {
+
+    console.log(
+      "Top Up Game Wallet clicked"
+    );
+  }
+
+  // --------------------------------
+  // TILE CLICK
+  // --------------------------------
 
   function handleTileClick(index) {
-    console.log("Tile clicked", gameStatus, movesLeft);
 
-  if (gameStatus !== "playing") {
-    return;
-  }
+    console.log(
+      "Tile clicked",
+      gameStatus,
+      movesLeft
+    );
 
-  if (selectedIndex === null) {
-    setSelectedIndex(index);
-    return;
-  }
+    if (gameStatus !== "playing") {
+      return;
+    }
 
-  if (selectedIndex === index) {
+    if (selectedIndex === null) {
+
+      setSelectedIndex(index);
+
+      return;
+    }
+
+    if (selectedIndex === index) {
+
+      setSelectedIndex(null);
+
+      return;
+    }
+
+    if (
+      !isAdjacent(
+        selectedIndex,
+        index
+      )
+    ) {
+
+      setSelectedIndex(index);
+
+      return;
+    }
+
+    processMove(
+      selectedIndex,
+      index
+    );
+
     setSelectedIndex(null);
-    return;
   }
 
-  if (!isAdjacent(selectedIndex, index)) {
-    setSelectedIndex(index);
-    return;
-  }
-
-  processMove(selectedIndex, index);
-
-  setSelectedIndex(null);
-}
+  // --------------------------------
+  // RETURN
+  // --------------------------------
 
   return {
     board,
@@ -210,13 +646,24 @@ function processMove(firstIndex, secondIndex) {
     score,
     movesLeft,
     currentLevel,
+    highestLevel,
     targetScore,
+    reward,
+    specialTilesActivated,
+    tilesCleared,
+    objectives:
+      levels[currentLevel - 1].objectives,
     gameStatus,
+    cashBalance,
+    coinBalance,
+    handleTopUp,
     handleTileClick,
     resetGame,
+    startGame,
     nextLevel,
     exitGame,
-    loadLevel,
-};
+    startLevel,
+  };
 }
+
 export default useBoard;
