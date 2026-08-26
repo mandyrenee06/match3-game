@@ -20,6 +20,7 @@ function Board() {
     gameStatus,
     cashBalance,
     coinBalance,
+    processWithdrawal,
     handleTileClick,
     resetGame,
     startGame,
@@ -56,6 +57,7 @@ function Board() {
         isOpen={showWithdrawal}
         onClose={() => setShowWithdrawal(false)}
         coinBalance={coinBalance}
+        onWithdraw={processWithdrawal}
       />
 
       {gameStatus === "start" && !showTopUp && !showWithdrawal && (

@@ -636,6 +636,43 @@ function useBoard() {
     setSelectedIndex(null);
   }
 
+// --------------------------------
+// WITHDRAW COINS
+// --------------------------------
+
+function processWithdrawal(coins) {
+  const amount = Number(coins);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return {
+      success: false,
+      message: "Invalid withdrawal amount.",
+    };
+  }
+
+  if (amount > coinBalance) {
+    return {
+      success: false,
+      message: "Insufficient coin balance.",
+    };
+  }
+
+  const newCoinBalance = coinBalance - amount;
+
+  setCoinBalance(newCoinBalance);
+
+  // Keep the remaining balance saved
+  savePlayerProgress(
+    highestLevel,
+    newCoinBalance
+  );
+
+  return {
+    success: true,
+    newCoinBalance,
+  };
+}
+
   // --------------------------------
   // RETURN
   // --------------------------------
@@ -663,6 +700,7 @@ function useBoard() {
     nextLevel,
     exitGame,
     startLevel,
+    processWithdrawal,
   };
 }
 

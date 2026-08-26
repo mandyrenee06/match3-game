@@ -29,6 +29,7 @@ function WithdrawalModal({
   isOpen,
   onClose,
   coinBalance,
+  onWithdraw,
 }) {
   const [country, setCountry] = useState("");
   const [fullName, setFullName] = useState("");
@@ -150,43 +151,65 @@ function WithdrawalModal({
     // Current date and time
     const requestedAt = new Date();
 
-    const withdrawalData = {
-      country,
-      currency: selectedCurrencyCode,
+const withdrawalData = {
+  country,
+  currency: selectedCurrencyCode,
+  fullName: fullName.trim(),
+  username: username.trim(),
+  coinsRequested,
+  usdAmount,
+  localAmount,
+  requestedAt: requestedAt.toISOString(),
+  status: "pending",
+};
 
-      fullName: fullName.trim(),
+console.log(
+  "Withdrawal request:",
+  withdrawalData
+);
 
-      username: username.trim(),
+// Deduct coins from the game wallet
+const withdrawalResult =
+  onWithdraw(coinsRequested);
 
-      coinsRequested,
+if (!withdrawalResult?.success) {
+  alert(
+    withdrawalResult?.message ||
+    "Withdrawal could not be processed."
+  );
 
-      usdAmount,
+  return;
+}
 
-      localAmount,
+// Save withdrawal request locally for now
+const existingWithdrawals =
+  JSON.parse(
+    localStorage.getItem(
+      "nehxifyWithdrawalRequests"
+    )
+  ) || [];
 
-      requestedAt:
-        requestedAt.toISOString(),
+existingWithdrawals.push(
+  withdrawalData
+);
 
-      status: "pending",
-    };
+localStorage.setItem(
+  "nehxifyWithdrawalRequests",
+  JSON.stringify(existingWithdrawals)
+);
 
-    console.log(
-      "Withdrawal request:",
-      withdrawalData
-    );
+alert(
+  "Withdrawal request submitted successfully. Your request is now pending manual processing."
+);
 
-    alert(
-      "Withdrawal request submitted successfully. Your request is now pending manual processing."
-    );
+// Reset form
+setCountry("");
+setFullName("");
+setUsername("");
+setWithdrawalAmount("");
 
-    // Reset form
-    setCountry("");
-    setFullName("");
-    setUsername("");
-    setWithdrawalAmount("");
-
-    onClose();
-  }
+onClose();
+}
 
   return (
     <div className="modal-overlay">
