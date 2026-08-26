@@ -7,6 +7,7 @@ import GameWallet from "../components/GameWallet";
 import TopUpGameWallet from "../components/TopUpGameWallet";
 import StartGameModal from "../components/StartGameModal";
 import WithdrawalModal from "../components/WithdrawalModal";
+import TransactionHistory from "../components/TransactionHistory";
 
 function Board() {
   const {
@@ -30,6 +31,8 @@ function Board() {
 
   const [showTopUp, setShowTopUp] = useState(false);
   const [showWithdrawal, setShowWithdrawal] = useState(false);
+  const [showTransactions, setShowTransactions] =
+  useState(false);
 
   return (
     <div className="game-container">
@@ -46,6 +49,8 @@ function Board() {
         coinBalance={coinBalance}
         onTopUp={() => setShowTopUp(true)}
         onWithdraw={() => setShowWithdrawal(true)}
+        onTransactions={() =>
+          setShowTransactions(true)}
       />
 
       <TopUpGameWallet
@@ -58,6 +63,12 @@ function Board() {
         onClose={() => setShowWithdrawal(false)}
         coinBalance={coinBalance}
         onWithdraw={processWithdrawal}
+      />
+
+      <TransactionHistory
+        isOpen={showTransactions}
+        onClose={() =>
+        setShowTransactions(false)}
       />
 
       {gameStatus === "start" && !showTopUp && !showWithdrawal && (

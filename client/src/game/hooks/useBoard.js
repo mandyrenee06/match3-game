@@ -11,6 +11,10 @@ import { activateSpecialTile } from "../../utils/activateSpecialTile";
 import { activateLineTile } from "../../utils/activateLineTile";
 import { levels } from "../../config/levels";
 import { hasPossibleMove } from "../../utils/hasPossibleMove";
+import {
+  addTransaction,
+  TRANSACTION_TYPES,
+} from "../../config/transactionHistory";
 
 function useBoard() {
 
@@ -418,6 +422,18 @@ function useBoard() {
         levels[currentLevel - 1].reward || 0;
     } else if (remainingMoves <= 0) {
       newStatus = "lost";
+    }
+
+    if (earnedReward > 0) {
+      addTransaction({
+        type: TRANSACTION_TYPES.GAME_REWARD,
+        coins: earnedReward,
+        status: "completed",
+        description: `Level ${currentLevel} game reward`,
+        metadata: {
+          level: currentLevel,
+        },
+      });
     }
 
     // --------------------------------

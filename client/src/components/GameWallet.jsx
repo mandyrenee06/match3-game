@@ -3,6 +3,7 @@ function GameWallet({
   coinBalance,
   onTopUp,
   onWithdraw,
+  onTransactions,
 }) {
   return (
     <div className="game-wallet">
@@ -63,6 +64,13 @@ function GameWallet({
         onClick={onWithdraw}
       >
         💸 Withdraw
+      </button>
+
+      <button
+        className="transaction-history-button"
+        onClick={onTransactions}
+      >
+        🧾 Transactions
       </button>
 
     </div>
