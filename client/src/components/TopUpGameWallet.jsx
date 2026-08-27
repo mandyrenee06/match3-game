@@ -5,8 +5,16 @@ import {
   usdToCoins,
   localCurrencyToUsd,
 } from "../config/currencies";
+import {
+  addTransaction,
+  TRANSACTION_TYPES,
+} from "../config/transactionHistory";
 
-function TopUpGameWallet({ isOpen, onClose }) {
+function TopUpGameWallet({
+  isOpen,
+  onClose,
+  onTransferToGameWallet,
+}) {
   const [country, setCountry] = useState("");
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -136,12 +144,32 @@ function TopUpGameWallet({ isOpen, onClose }) {
       (prev) => prev - amount
     );
 
+    // Add coins to the game wallet
+    if (onTransferToGameWallet) {
+      onTransferToGameWallet(coinsReceived);
+    }
+
+    // Record transaction
+    addTransaction({
+      type: TRANSACTION_TYPES.ACCOUNT_TRANSFER,
+      coins: coinsReceived,
+      amount,
+      currency: accountCurrency,
+      status: "completed",
+      description: "Transfer from account balance to game wallet",
+      metadata: {
+        source: "Account Balance",
+        destination: "Game Wallet",
+        usdAmount,
+        coinsReceived,
+      },
+    });
+
     setTransferAmount("");
 
     alert(
       `Transfer successful! You received ${coinsReceived.toLocaleString()} coins.`
-    );
-  }
+    );}
 
   // --------------------------------
   // DIRECT DEPOSIT
@@ -187,6 +215,24 @@ function TopUpGameWallet({ isOpen, onClose }) {
       "Game wallet top-up submitted:",
       paymentData
     );
+
+    // Record direct deposit as pending
+    addTransaction({
+      type: TRANSACTION_TYPES.DIRECT_DEPOSIT,
+      coins: 0,
+      amount: localAmount,
+      currency: selectedCountry.currency,
+      status: "pending",
+      description: "Game wallet top-up pending verification",
+      metadata: {
+        country,
+        usdAmount,
+        estimatedCoins: coinsReceived,
+        paymentMethod,
+        paymentNumber,
+        paymentMessage,
+      },
+    });
 
     alert(
       `Payment submitted for verification.\n\nEstimated coins: ${coinsReceived.toLocaleString()}`

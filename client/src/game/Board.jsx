@@ -22,6 +22,7 @@ function Board() {
     cashBalance,
     coinBalance,
     processWithdrawal,
+    addCoinsToGameWallet,
     handleTileClick,
     resetGame,
     startGame,
@@ -56,6 +57,7 @@ function Board() {
       <TopUpGameWallet
         isOpen={showTopUp}
         onClose={() => setShowTopUp(false)}
+        onTransferToGameWallet={addCoinsToGameWallet}
       />
 
       <WithdrawalModal

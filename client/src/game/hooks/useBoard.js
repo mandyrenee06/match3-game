@@ -488,6 +488,18 @@ function useBoard() {
       newCoinBalance
     );
 
+    // Record game entry fee
+  addTransaction({
+    type: TRANSACTION_TYPES.GAME_ENTRY,
+    coins: -100,
+    status: "completed",
+    description: `Level ${highestLevel} game entry fee`,
+    metadata: {
+      level: highestLevel,
+      fee: 100,
+    },
+  });
+
     // IMPORTANT:
     // Start at the player's highest
     // unlocked level, NOT level 1.
@@ -523,6 +535,19 @@ function useBoard() {
     setCoinBalance(
       newCoinBalance
     );
+
+    // Record retry game entry fee
+    addTransaction({
+      type: TRANSACTION_TYPES.GAME_ENTRY,
+      coins: -100,
+      status: "completed",
+      description: `Level ${currentLevel} retry fee`,
+      metadata: {
+        level: currentLevel,
+        fee: 100,
+        retry: true,
+      },
+    });
 
     // Same level, completely fresh attempt
     startLevel(currentLevel);
@@ -595,10 +620,22 @@ function useBoard() {
   // TOP UP
   // --------------------------------
 
-  function handleTopUp() {
+  function addCoinsToGameWallet(coins) {
 
-    console.log(
-      "Top Up Game Wallet clicked"
+    const amount = Number(coins);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return;
+    }
+
+    const newCoinBalance =
+      coinBalance + amount;
+
+    setCoinBalance(newCoinBalance);
+
+    savePlayerProgress(
+      highestLevel,
+      newCoinBalance
     );
   }
 
@@ -709,7 +746,7 @@ function processWithdrawal(coins) {
     gameStatus,
     cashBalance,
     coinBalance,
-    handleTopUp,
+    addCoinsToGameWallet,
     handleTileClick,
     resetGame,
     startGame,

@@ -5,6 +5,10 @@ import {
   currencies,
   NO_DECIMAL_CURRENCIES,
 } from "../config/currencies";
+import {
+  addTransaction,
+  TRANSACTION_TYPES,
+} from "../config/transactionHistory";
 
 const MIN_WITHDRAWAL_COINS = 1000;
 
@@ -180,6 +184,25 @@ if (!withdrawalResult?.success) {
 
   return;
 }
+
+// Record withdrawal in transaction history
+addTransaction({
+  type: TRANSACTION_TYPES.WITHDRAWAL,
+  coins: -coinsRequested,
+  amount: localAmount,
+  currency: selectedCurrencyCode,
+  status: "pending",
+  description: "Withdrawal request",
+  metadata: {
+    country,
+    fullName: fullName.trim(),
+    username: username.trim(),
+    coinsRequested,
+    usdAmount,
+    localAmount,
+    requestedAt: requestedAt.toISOString(),
+  },
+});
 
 // Save withdrawal request locally for now
 const existingWithdrawals =
