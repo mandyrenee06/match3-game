@@ -2,16 +2,34 @@ function GameOverModal({
   gameStatus,
   score,
   reward,
+  objectives,
+  specialTilesActivated,
+  tilesCleared,
   onRestart,
   onNextLevel,
   onExit,
 }) {
-  // Don't show the modal while the game is still being played
   if (gameStatus !== "won" && gameStatus !== "lost") {
     return null;
   }
 
   const playerWon = gameStatus === "won";
+
+  function getObjectiveProgress(objective) {
+    if (objective.type === "score") {
+      return score;
+    }
+
+    if (objective.type === "special") {
+      return specialTilesActivated;
+    }
+
+    if (objective.type === "clear") {
+      return tilesCleared;
+    }
+
+    return 0;
+  }
 
   return (
     <div className="game-over-overlay">
@@ -22,27 +40,77 @@ function GameOverModal({
         </div>
 
         <h2>
-          {playerWon ? "Level Complete!" : "Game Over"}
+          {playerWon
+            ? "Level Complete!"
+            : "Game Over"}
         </h2>
 
         <p className="game-over-message">
           {playerWon
-            ? "Amazing! You completed this level."
-            : "You ran out of moves before reaching the target score."}
+            ? "Amazing! You completed all the objectives."
+            : "You ran out of moves before completing all the objectives."}
         </p>
 
-        {playerWon && (
+        {/* OBJECTIVES */}
+        <div className="game-over-objectives">
+
+          <h3>🎯 Objectives</h3>
+
+          {objectives?.map((objective, index) => {
+            const progress =
+              getObjectiveProgress(objective);
+
+            const completed =
+              progress >= objective.target;
+
+            return (
+              <div
+                className={`game-over-objective ${
+                  completed ? "completed" : ""
+                }`}
+                key={`${objective.type}-${index}`}
+              >
+                <span className="objective-status">
+                  {completed ? "✅" : "❌"}
+                </span>
+
+                <span className="objective-label">
+                  {objective.label}
+                </span>
+
+                <strong>
+                  {Math.min(
+                    progress,
+                    objective.target
+                  )}
+                  /
+                  {objective.target}
+                </strong>
+              </div>
+            );
+          })}
+
+        </div>
+
+        {/* SCORE */}
+        <div className="game-over-score">
+          <span>⭐ Your Score</span>
+          <strong>
+            {score.toLocaleString()}
+          </strong>
+        </div>
+
+        {/* REWARD */}
+        {playerWon && reward > 0 && (
           <div className="game-reward">
             <span>🪙 Level Reward</span>
-            <strong>+{reward.toLocaleString()} Coins</strong>
+            <strong>
+              +{reward.toLocaleString()} Coins
+            </strong>
           </div>
         )}
 
-        <div className="game-over-score">
-          <span>⭐ Your Score</span>
-          <strong>{score.toLocaleString()}</strong>
-        </div>
-
+        {/* ACTIONS */}
         {playerWon ? (
           <button
             className="next-level-button"

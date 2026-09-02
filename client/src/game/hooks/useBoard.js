@@ -15,6 +15,7 @@ import {
   addTransaction,
   TRANSACTION_TYPES,
 } from "../../config/transactionHistory";
+import { playSound } from "../../utils/soundManager";
 
 function useBoard() {
 
@@ -51,8 +52,14 @@ function useBoard() {
   const [selectedIndex, setSelectedIndex] =
     useState(null);
 
+  const [isAnimating, setIsAnimating] =
+    useState(false);
+
   const [score, setScore] =
     useState(0);
+
+  const [scorePopups, setScorePopups] =
+  useState([]);
 
   const [currency, setCurrency] = 
     useState("KES");
@@ -142,11 +149,43 @@ function useBoard() {
     return true;
   }
 
+  function wait(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function showScorePopup(points, index) {
+    console.log("SHOWING SCORE POPUP:", points, index);
+
+    const row = Math.floor(index / 8);
+    const col = index % 8;
+
+    const popup = {
+      id: Date.now() + Math.random(),
+      score: points,
+      x: col * 62 + 31,
+      y: row * 62 + 31,
+    };
+
+    setScorePopups((previous) => [
+      ...previous,
+      popup,
+    ]);
+
+    setTimeout(() => {
+      setScorePopups((previous) =>
+        previous.filter(
+          (item) => item.id !== popup.id
+        )
+      );
+    }, 900);
+  }
   // --------------------------------
   // PROCESS MOVE
   // --------------------------------
 
-  function processMove(firstIndex, secondIndex) {
+  async function processMove(firstIndex, secondIndex) {
 
     if (gameStatus !== "playing") {
       return false;
@@ -155,6 +194,14 @@ function useBoard() {
     if (movesLeft <= 0) {
       return false;
     }
+
+    if (isAnimating) {
+      return false;
+    }
+
+    setIsAnimating(true);
+
+    playSound("swap");
 
     const swappedBoard =
       swapTiles(
@@ -179,6 +226,14 @@ function useBoard() {
 
     const specialActivated =
       bombActivated || lineActivated;
+    
+    if (bombActivated) {
+      playSound("bomb");
+    }
+
+    if (lineActivated) {
+      playSound("line");
+    }
 
     let currentBoard =
       swappedBoard;
@@ -188,6 +243,8 @@ function useBoard() {
     let specialActivatedCount = 0;
 
     let clearedTilesThisMove = 0;
+
+    let specialClearedIndexes = [];
 
     // --------------------------------
     // BOMB
@@ -208,6 +265,10 @@ function useBoard() {
           result.clearedIndexes
         );
 
+      specialClearedIndexes.push(
+        ...result.clearedIndexes
+      );
+
       specialActivatedCount++;
     }
 
@@ -225,6 +286,11 @@ function useBoard() {
         calculateScore(
           result.clearedIndexes
         );
+
+      specialClearedIndexes.push(
+        ...result.clearedIndexes
+      );
+
 
       specialActivatedCount++;
     }
@@ -248,6 +314,11 @@ function useBoard() {
           result.clearedIndexes
         );
 
+      specialClearedIndexes.push(
+        ...result.clearedIndexes
+      );
+
+
       specialActivatedCount++;
     }
 
@@ -266,6 +337,11 @@ function useBoard() {
           result.clearedIndexes
         );
 
+      specialClearedIndexes.push(
+        ...result.clearedIndexes
+      );
+
+
       specialActivatedCount++;
     }
 
@@ -282,6 +358,7 @@ function useBoard() {
       !specialActivated
     ) {
       console.log("Invalid move");
+      setIsAnimating(false);
       return false;
     }
 
@@ -291,16 +368,110 @@ function useBoard() {
       specialScore;
 
     // --------------------------------
-    // SPECIAL TILE REFILL
+    // SPECIAL TILE ANIMATION
+    // --------------------------------
+
+    if (
+      specialActivated &&
+      specialClearedIndexes.length > 0
+    ) {
+      const uniqueIndexes = [
+        ...new Set(
+          specialClearedIndexes
+        ),
+      ];
+
+      currentBoard =
+        currentBoard.map(
+          (tile, index) => {
+            if (
+              uniqueIndexes.includes(index)
+            ) {
+              return {
+                ...tile,
+                matched: true,
+              };
+            }
+
+            return tile;
+          }
+        );
+
+      setBoard(currentBoard);
+
+      await wait(300);
+
+      currentBoard =
+        removeMatches(
+          currentBoard,
+          uniqueIndexes
+        );
+
+      setBoard(currentBoard);
+
+      await wait(50);
+    }
+
+    // --------------------------------
+    // SPECIAL TILE GRAVITY + REFILL
     // --------------------------------
 
     if (specialActivated) {
-
       currentBoard =
         applyGravity(currentBoard);
 
       currentBoard =
+        currentBoard.map(
+          (tile) => ({
+            ...tile,
+            gravityMoving:
+              tile.type !== null,
+          })
+        );
+
+      setBoard(currentBoard);
+
+      await wait(250);
+
+      const emptyPositions =
+        currentBoard
+          .map((tile, index) =>
+            tile.type === null
+              ? index
+              : null
+          )
+          .filter(
+            (index) =>
+              index !== null
+          );
+
+      currentBoard =
         refillBoard(currentBoard);
+
+      currentBoard =
+        currentBoard.map(
+          (tile, index) => ({
+            ...tile,
+            gravityMoving: false,
+            newlySpawned:
+              emptyPositions.includes(
+                index
+              ),
+          })
+        );
+
+      setBoard(currentBoard);
+
+      await wait(250);
+
+      currentBoard =
+        currentBoard.map(
+          (tile) => ({
+            ...tile,
+            newlySpawned: false,
+            gravityMoving: false,
+          })
+        );
 
       matches =
         findMatches(currentBoard);
@@ -314,14 +485,58 @@ function useBoard() {
       matches.length > 0 &&
       cascadeCount < 20
     ) {
-
       const points =
         calculateScore(matches);
 
+      playSound("match");
+
       totalPoints += points;
+
+      if (points > 0 && matches.length > 0) {
+        const popupIndex =
+          matches[
+            Math.floor(
+              matches.length / 2
+            )
+          ];
+
+        showScorePopup(
+          points,
+          popupIndex
+        );
+      }
 
       clearedTilesThisMove +=
         matches.length;
+
+      // -------------------------
+      // SHOW MATCH ANIMATION
+      // -------------------------
+
+      currentBoard = currentBoard.map(
+        (tile, index) => {
+          if (matches.includes(index)) {
+            return {
+              ...tile,
+              matched: true,
+            };
+          }
+
+          return tile;
+        }
+      );
+
+      setBoard(currentBoard);
+
+      // Give React time to render
+      // the match animation.
+      await new Promise((resolve) =>
+        setTimeout(resolve, 300)
+      );
+
+      // -------------------------
+      // REMOVE MATCHED TILES
+      // -------------------------
 
       currentBoard =
         removeMatches(
@@ -329,11 +544,64 @@ function useBoard() {
           matches
         );
 
+      // -------------------------
+      // GRAVITY
+      // -------------------------
+
       currentBoard =
         applyGravity(currentBoard);
 
+      // Show the board after gravity
+      currentBoard =
+        currentBoard.map((tile) => ({
+          ...tile,
+          gravityMoving:
+            tile.type !== null,
+        }));
+
+      setBoard(currentBoard);
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 250)
+      );
+
+      const emptyPositions = currentBoard
+        .map((tile, index) =>
+          tile.type === null ? index : null
+        )
+        .filter((index) => index !== null);
+
+      // -------------------------
+      // REFILL
+      // -------------------------
+
       currentBoard =
         refillBoard(currentBoard);
+
+      currentBoard =
+        currentBoard.map((tile, index) => ({
+          ...tile,
+          gravityMoving: false,
+          newlySpawned:
+            emptyPositions.includes(index),
+        }));
+
+      setBoard(currentBoard);
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 250)
+      );
+
+      currentBoard =
+        currentBoard.map((tile) => ({
+          ...tile,
+          newlySpawned: false,
+          gravityMoving: false,
+        }));
+
+      // -------------------------
+      // FIND NEXT CASCADE
+      // -------------------------
 
       matches =
         findMatches(currentBoard);
@@ -380,6 +648,22 @@ function useBoard() {
     const currentObjectives =
       levels[currentLevel - 1].objectives;
 
+    console.log("CURRENT LEVEL:", currentLevel);
+
+    console.log(
+      "CURRENT OBJECTIVES:",
+      currentObjectives
+    );
+
+    console.log(
+      "OBJECTIVE PROGRESS:",
+      {
+        score: newScore,
+        specialTilesActivated: newSpecialTilesActivated,
+        tilesCleared: newTilesCleared,
+      }
+    );
+
     const objectivesComplete =
       currentObjectives.every(
         (objective) => {
@@ -420,8 +704,10 @@ function useBoard() {
 
       earnedReward =
         levels[currentLevel - 1].reward || 0;
+        playSound("win");
     } else if (remainingMoves <= 0) {
       newStatus = "lost";
+      playSound("gameover");
     }
 
     if (earnedReward > 0) {
@@ -462,6 +748,8 @@ function useBoard() {
     setGameStatus(newStatus);
 
     setBoard(currentBoard);
+
+    setIsAnimating(false);
 
     return true;
   }
@@ -734,6 +1022,7 @@ function processWithdrawal(coins) {
     board,
     selectedIndex,
     score,
+    scorePopups,
     movesLeft,
     currentLevel,
     highestLevel,

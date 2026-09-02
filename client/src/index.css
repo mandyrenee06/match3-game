@@ -11,6 +11,8 @@ body {
 }
 
 .board {
+  position: relative;
+
   display: grid;
   grid-template-columns: repeat(8, 70px);
   gap: 8px;
@@ -773,6 +775,7 @@ body {
 }
 
 .game-container {
+  position: relative;
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -1146,4 +1149,633 @@ body {
 
 .transaction-history-button:active {
   transform: translateY(0);
+}
+
+/* =========================
+   OBJECTIVES PANEL
+   ========================= */
+
+.objectives-panel {
+  width: 100%;
+  max-width: 520px;
+  margin: 15px auto;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-sizing: border-box;
+}
+
+.objectives-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.objectives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.objective-item {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.objective-item.completed {
+  opacity: 0.75;
+}
+
+.objective-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.objective-icon {
+  font-size: 18px;
+}
+
+.objective-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.objective-check {
+  font-size: 16px;
+}
+
+.objective-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.objective-progress-bar {
+  flex: 1;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.objective-progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.objective-progress-text {
+  min-width: 75px;
+  font-size: 12px;
+  text-align: right;
+  opacity: 0.85;
+}
+
+/* =========================
+   TILE ANIMATIONS
+   ========================= */
+
+.tile {
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tile contents have their own animation */
+.tile-content {
+  display: inline-block;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+/* =========================
+   SELECTED TILE
+   ========================= */
+
+.tile.selected {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 3px rgba(255, 215, 0, 0.95),
+    0 0 18px rgba(255, 215, 0, 0.55);
+  z-index: 2;
+}
+
+.tile.selected .tile-content {
+  transform: scale(1.08);
+}
+
+/* =========================
+   HOVER
+   ========================= */
+
+.tile:hover {
+  transform: scale(1.04);
+}
+
+.tile:hover .tile-content {
+  transform: scale(1.05);
+}
+
+/* Don't let hover override the selected state */
+.tile.selected:hover {
+  transform: scale(1.08);
+}
+
+/* =========================
+   PRESS / CLICK FEEDBACK
+   ========================= */
+
+.tile:active {
+  transform: scale(0.94);
+}
+
+.tile.selected:active {
+  transform: scale(1.02);
+}
+
+/* =========================
+   KEYBOARD FOCUS
+   ========================= */
+
+.tile:focus-visible {
+  outline: 2px solid rgba(255, 215, 0, 0.9);
+  outline-offset: 2px;
+}
+
+/* =========================
+   SPECIAL TILES
+   ========================= */
+
+.tile-content {
+  will-change: transform;
+}
+
+/* =========================
+   MATCH ANIMATION
+   ========================= */
+
+.tile.matched {
+  animation: tileMatch 0.3s ease forwards;
+  pointer-events: none;
+}
+
+.tile.matched .tile-content {
+  animation: tileMatchContent 0.3s ease forwards;
+}
+
+@keyframes tileMatch {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  45% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes tileMatchContent {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  45% {
+    transform: scale(1.15) rotate(8deg);
+  }
+
+  100% {
+    transform: scale(0.4) rotate(-8deg);
+    opacity: 0;
+  }
+}
+
+/* =========================
+   GRAVITY ANIMATION
+   ========================= */
+
+.tile.gravity-moving {
+  animation: tileFall 0.25s ease-out;
+}
+
+@keyframes tileFall {
+  0% {
+    transform: translateY(-18px);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   NEW TILE ANIMATION
+   ========================= */
+
+.tile.newly-spawned {
+  animation: tileSpawn 0.25s ease-out;
+}
+
+@keyframes tileSpawn {
+  0% {
+    transform: translateY(-35px) scale(0.7);
+    opacity: 0;
+  }
+
+  70% {
+    transform: translateY(4px) scale(1.05);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   GRAVITY ANIMATION
+   ========================= */
+
+.tile.gravity-moving {
+  animation: tileFall 0.25s ease-out;
+}
+
+@keyframes tileFall {
+  0% {
+    transform: translateY(-18px);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   NEW TILE ANIMATION
+   ========================= */
+
+.tile.newly-spawned {
+  animation: tileSpawn 0.25s ease-out;
+}
+
+@keyframes tileSpawn {
+  0% {
+    transform: translateY(-35px) scale(0.7);
+    opacity: 0;
+  }
+
+  70% {
+    transform: translateY(4px) scale(1.05);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.score-popup {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  animation: scorePopup 900ms ease-out forwards;
+}
+
+@keyframes scorePopup {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.8);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -45px) scale(1);
+  }
+}
+
+.game-over-objectives {
+  width: 100%;
+  margin: 16px 0;
+}
+
+.game-over-objectives h3 {
+  margin-bottom: 10px;
+}
+
+.game-over-objective {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 10px;
+  margin-bottom: 6px;
+
+  border-radius: 8px;
+}
+
+.game-over-objective.completed {
+  opacity: 1;
+}
+
+.objective-status {
+  font-size: 18px;
+}
+
+.objective-label {
+  flex: 1;
+  text-align: left;
+}
+
+.game-over-objective strong {
+  font-size: 13px;
+}
+
+/* =========================
+   RESPONSIVE GAME LAYOUT
+========================= */
+
+@media (max-width: 700px) {
+  /* Prevent horizontal page scrolling */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Give the game enough room on small screens */
+  .game-container {
+    width: 100%;
+    padding: 12px;
+    overflow-x: hidden;
+  }
+
+  /* =========================
+     GAME HEADER
+  ========================= */
+
+  .game-header {
+    width: 100%;
+    max-width: 520px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .header-item {
+    min-width: 0;
+    width: 100%;
+    padding: 9px 6px;
+  }
+
+  .header-item span {
+    font-size: 11px;
+  }
+
+  .header-item strong {
+    font-size: 17px;
+  }
+
+  .header-item:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* =========================
+     OBJECTIVES
+  ========================= */
+
+  .objectives-panel {
+    width: 100%;
+    max-width: 520px;
+    padding: 13px;
+    margin: 12px auto;
+  }
+
+  .objectives-title {
+    font-size: 16px;
+  }
+
+  .objective-label {
+    font-size: 13px;
+  }
+
+  .objective-progress-text {
+    min-width: 60px;
+    font-size: 11px;
+  }
+
+  /* =========================
+     GAME WALLET
+  ========================= */
+
+  .game-wallet {
+    width: 100%;
+    max-width: 420px;
+    padding: 15px;
+    margin: 15px auto;
+  }
+
+  .wallet-header {
+    font-size: 19px;
+  }
+
+  .wallet-balances {
+    gap: 8px;
+  }
+
+  .wallet-balance {
+    padding: 12px;
+  }
+
+  .wallet-balance span {
+    font-size: 12px;
+  }
+
+  .wallet-balance strong {
+    font-size: 16px;
+  }
+
+  /* =========================
+     GAME BOARD
+  ========================= */
+
+  .board {
+    width: 100%;
+    max-width: 656px;
+
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 4px;
+
+    padding: 10px;
+
+    margin-top: 20px;
+  }
+
+  .tile {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+
+    border-radius: 8px;
+
+    font-size: clamp(20px, 7vw, 35px);
+  }
+
+  .tile:hover {
+    transform: none;
+  }
+
+  .tile.selected {
+    transform: scale(1.04);
+  }
+
+  .tile.selected:hover {
+    transform: scale(1.04);
+  }
+
+  /* =========================
+     MODALS
+  ========================= */
+
+  .top-up-modal,
+  .start-game-modal,
+  .game-over-modal {
+    width: 100%;
+    max-width: 430px;
+  }
+
+  .top-up-modal {
+    padding: 22px 18px;
+  }
+
+  .start-game-modal,
+  .game-over-modal {
+    padding: 25px 18px;
+  }
+
+  .start-game-modal h2,
+  .game-over-modal h2 {
+    font-size: 24px;
+  }
+
+  /* =========================
+     RECIPIENT DETAILS
+  ========================= */
+
+  .recipient-value {
+    align-items: flex-start;
+  }
+
+  .recipient-value span {
+    min-width: 0;
+  }
+
+  /* =========================
+     ACCOUNT BALANCE
+  ========================= */
+
+  .account-balance-display {
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .account-balance-display span {
+    font-size: 13px;
+  }
+
+  .account-balance-display strong {
+    font-size: 15px;
+    text-align: right;
+  }
+
+  /* =========================
+     WITHDRAWAL PREVIEW
+  ========================= */
+
+  .withdrawal-preview {
+    padding: 13px;
+  }
+
+  .withdrawal-preview > div {
+    gap: 10px;
+  }
+
+  /* =========================
+     GAME OVER OBJECTIVES
+  ========================= */
+
+  .game-over-objectives {
+    margin: 12px 0;
+  }
+}
+
+/* =========================
+   EXTRA SMALL PHONES
+========================= */
+
+@media (max-width: 380px) {
+  .game-container {
+    padding: 8px;
+  }
+
+  .game-header {
+    gap: 7px;
+  }
+
+  .header-item {
+    padding: 8px 4px;
+  }
+
+  .header-item strong {
+    font-size: 15px;
+  }
+
+  .board {
+    gap: 3px;
+    padding: 7px;
+  }
+
+  .tile {
+    border-radius: 6px;
+    font-size: clamp(18px, 6.5vw, 28px);
+  }
+
+  .wallet-balances {
+    grid-template-columns: 1fr;
+  }
+
+  .top-up-modal,
+  .start-game-modal,
+  .game-over-modal {
+    padding: 20px 14px;
+  }
 }

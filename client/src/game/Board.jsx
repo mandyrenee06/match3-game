@@ -8,12 +8,15 @@ import TopUpGameWallet from "../components/TopUpGameWallet";
 import StartGameModal from "../components/StartGameModal";
 import WithdrawalModal from "../components/WithdrawalModal";
 import TransactionHistory from "../components/TransactionHistory";
+import ObjectivesPanel from "../components/ObjectivesPanel";
+import ScorePopup from "./ScorePopup";
 
 function Board() {
   const {
     board,
     selectedIndex,
     score,
+    scorePopups,
     movesLeft,
     currentLevel,
     targetScore,
@@ -21,6 +24,9 @@ function Board() {
     gameStatus,
     cashBalance,
     coinBalance,
+    objectives,
+    specialTilesActivated,
+    tilesCleared,
     processWithdrawal,
     addCoinsToGameWallet,
     handleTileClick,
@@ -43,6 +49,13 @@ function Board() {
         movesLeft={movesLeft}
         currentLevel={currentLevel}
         targetScore={targetScore}
+      />
+
+      <ObjectivesPanel
+        objectives={objectives}
+        score={score}
+        specialTilesActivated={specialTilesActivated}
+        tilesCleared={tilesCleared}
       />
 
       <GameWallet
@@ -82,6 +95,15 @@ function Board() {
       )}
 
       <div className="board">
+        {scorePopups.map((popup) => (
+          <ScorePopup
+            key={popup.id}
+            score={popup.score}
+            x={popup.x}
+            y={popup.y}
+          />
+        ))}
+
         {board.map((tile, index) => (
           <Tile
             key={tile.id}
@@ -96,6 +118,9 @@ function Board() {
         gameStatus={gameStatus}
         score={score}
         reward={reward}
+        objectives={objectives}
+        specialTilesActivated={specialTilesActivated}
+        tilesCleared={tilesCleared}
         onRestart={resetGame}
         onNextLevel={nextLevel}
         onExit={exitGame}

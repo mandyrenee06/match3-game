@@ -3,7 +3,7 @@
 // =========================
 
 // 100 coins = $1
-export const COINS_PER_USD = 100;
+export const COINS_PER_USD = 647;
 
 
 // ========================================

@@ -9,8 +9,7 @@ import {
   addTransaction,
   TRANSACTION_TYPES,
 } from "../config/transactionHistory";
-
-const MIN_WITHDRAWAL_COINS = 1000;
+import { withdrawalLimits } from "../config/withdrawalLimits";
 
 const countryCurrencies = {
   Kenya: "KES",
@@ -68,6 +67,14 @@ function WithdrawalModal({
     coinsRequested > 0
       ? coinsToUsd(coinsRequested)
       : 0;
+  
+  const selectedWithdrawalLimit =
+    withdrawalLimits[country];
+
+  const belowWithdrawalMinimum =
+    coinsRequested > 0 &&
+    selectedWithdrawalLimit &&
+    coinsRequested < selectedWithdrawalLimit.minimumCoins;
 
   const localAmount =
     selectedCurrencyCode && usdAmount > 0
@@ -82,8 +89,8 @@ function WithdrawalModal({
   // -------------------------
 
   const canWithdraw =
-    coinBalance >= MIN_WITHDRAWAL_COINS &&
-    coinsRequested >= MIN_WITHDRAWAL_COINS &&
+    coinsRequested > 0 &&
+    !belowWithdrawalMinimum &&
     coinsRequested <= coinBalance &&
     country &&
     fullName.trim() &&
@@ -116,16 +123,15 @@ function WithdrawalModal({
   function handleSubmit(event) {
     event.preventDefault();
 
-    if (coinBalance < MIN_WITHDRAWAL_COINS) {
-      alert(
-        `You need at least ${MIN_WITHDRAWAL_COINS.toLocaleString()} coins to withdraw.`
-      );
+    if (coinsRequested <= 0) {
+      alert("Please enter a valid withdrawal amount.");
       return;
     }
 
-    if (coinsRequested < MIN_WITHDRAWAL_COINS) {
+    if (belowWithdrawalMinimum) {
       alert(
-        "The minimum withdrawal is 1,000 coins ($10)."
+        selectedWithdrawalLimit?.label ||
+        "The amount entered is too low to process this withdrawal. Please increase the amount."
       );
       return;
     }
@@ -269,32 +275,6 @@ onClose();
 
         </div>
 
-        {/* MINIMUM WITHDRAWAL */}
-
-        <div className="withdrawal-minimum">
-
-          <span>
-            Minimum withdrawal
-          </span>
-
-          <strong>
-            1,000 Coins = $10
-          </strong>
-
-        </div>
-
-        {coinBalance <
-          MIN_WITHDRAWAL_COINS && (
-          <p className="withdrawal-warning">
-            🔒 You need{" "}
-            {(
-              MIN_WITHDRAWAL_COINS -
-              coinBalance
-            ).toLocaleString()}{" "}
-            more coins before you can withdraw.
-          </p>
-        )}
-
         <form onSubmit={handleSubmit}>
 
           {/* COUNTRY */}
@@ -431,7 +411,6 @@ onClose();
             <input
               id="withdrawal-amount"
               type="number"
-              min={MIN_WITHDRAWAL_COINS}
               max={coinBalance}
               step="100"
               placeholder="e.g. 1000"
@@ -486,6 +465,12 @@ onClose();
               )}
 
             </div>
+          )}
+
+          {belowWithdrawalMinimum && (
+            <p className="withdrawal-warning">
+              ⚠️ {selectedWithdrawalLimit?.label}
+            </p>
           )}
 
           {/* SUBMIT */}

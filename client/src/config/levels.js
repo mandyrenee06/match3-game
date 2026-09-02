@@ -4,46 +4,91 @@ const createLevel = (level) => {
   let reward;
   let objectives;
 
-  // -------------------------
+  // =========================
   // DIFFICULTY / MOVES
-  // -------------------------
+  // =========================
 
   if (level <= 5) {
+    // Introductory levels
     moves = 20 + Math.floor(level / 3) * 5;
-  } else if (level <= 15) {
-    moves = 25;
-  } else if (level <= 30) {
-    moves = 24;
-  } else if (level <= 40) {
-    moves = 23;
+  } else if (level <= 9) {
+    // Score-focused levels
+    moves = 30;
+  } else if (level === 10) {
+    // First major milestone
+    moves = 35;
+  } else if (level <= 14) {
+    moves = 32;
+  } else if (level === 15) {
+    // Milestone level
+    moves = 34;
+  } else if (level <= 19) {
+    moves = 34;
+  } else if (level === 20) {
+    // Major milestone
+    moves = 40;
+  } else if (level <= 24) {
+    moves = 35;
+  } else if (level === 25) {
+    moves = 37;
+  } else if (level <= 29) {
+    moves = 36;
+  } else if (level === 30) {
+    moves = 42;
+  } else if (level <= 34) {
+    moves = 37;
+  } else if (level === 35) {
+    moves = 39;
+  } else if (level <= 39) {
+    moves = 38;
+  } else if (level === 40) {
+    moves = 44;
+  } else if (level <= 44) {
+    moves = 39;
+  } else if (level === 45) {
+    moves = 41;
+  } else if (level <= 49) {
+    moves = 40;
   } else {
-    moves = 22;
+    // Final level
+    moves = 45;
   }
 
-  // -------------------------
+  // =========================
   // TARGET SCORE
-  // -------------------------
+  // =========================
 
   if (level === 1) {
     targetScore = 1000;
   } else if (level === 2) {
-    targetScore = 1500;
+    targetScore = 2500;
   } else if (level === 3) {
-    targetScore = 2000;
+    targetScore = 4000;
   } else if (level === 4) {
-    targetScore = 5000;
+    targetScore = 3000;
   } else if (level === 5) {
-    targetScore = 6000;
+    targetScore = 5000;
+  } else if (level === 6) {
+    targetScore = 6500;
+  } else if (level === 7) {
+    targetScore = 7000;
+  } else if (level === 8) {
+    targetScore = 7500;
+  } else if (level === 9) {
+    targetScore = 8000;
+  } else if (level === 10) {
+    targetScore = 9000;
   } else {
-    targetScore = 6000 + (level - 5) * 1000;
+    // Gradual increase after Level 10
+    targetScore = 9000 + (level - 10) * 750;
   }
 
-  // -------------------------
+  // =========================
   // REWARDS
-  // -------------------------
+  // =========================
 
-   if (level <= 5) {
-    // Early levels: small profits
+  if (level <= 5) {
+    // Early levels
     reward = 110 + level * 10;
   } else if (level <= 10) {
     // Levels 6–10
@@ -62,32 +107,24 @@ const createLevel = (level) => {
     reward = 520 + (level - 41) * 10;
   }
 
-  // -------------------------
+  // =========================
   // OBJECTIVES
-  // -------------------------
+  // =========================
 
-  if (level <= 5) {
-    objectives = [
-      {
-        type: "score",
-        target: targetScore,
-        label: `Reach ${targetScore.toLocaleString()} points`,
-      },
-    ];
-  } else if (level <= 10) {
-    objectives = [
-      {
-        type: "score",
-        target: targetScore,
-        label: `Reach ${targetScore.toLocaleString()} points`,
-      },
-      {
-        type: "special",
-        target: 2,
-        label: "Activate 2 special tiles",
-      },
-    ];
-  } else if (level <= 20) {
+  const isMilestoneLevel = level % 5 === 0;
+
+  if (isMilestoneLevel) {
+    // -------------------------
+    // MILESTONE LEVELS
+    // 5, 10, 15, 20, ... 50
+    // -------------------------
+
+    const specialTarget =
+      Math.min(2 + Math.floor(level / 10), 6);
+
+    const clearTarget =
+      40 + level;
+
     objectives = [
       {
         type: "score",
@@ -96,70 +133,32 @@ const createLevel = (level) => {
       },
       {
         type: "special",
-        target: 3,
-        label: "Activate 3 special tiles",
+        target: specialTarget,
+        label: `Activate ${specialTarget} special tiles`,
       },
       {
         type: "clear",
-        target: 30 + level,
-        label: `Clear ${30 + level} tiles`,
-      },
-    ];
-  } else if (level <= 30) {
-    objectives = [
-      {
-        type: "score",
-        target: targetScore,
-        label: `Reach ${targetScore.toLocaleString()} points`,
-      },
-      {
-        type: "special",
-        target: 4,
-        label: "Activate 4 special tiles",
-      },
-      {
-        type: "clear",
-        target: 40 + level,
-        label: `Clear ${40 + level} tiles`,
-      },
-    ];
-  } else if (level <= 40) {
-    objectives = [
-      {
-        type: "score",
-        target: targetScore,
-        label: `Reach ${targetScore.toLocaleString()} points`,
-      },
-      {
-        type: "special",
-        target: 5,
-        label: "Activate 5 special tiles",
-      },
-      {
-        type: "clear",
-        target: 50 + level,
-        label: `Clear ${50 + level} tiles`,
+        target: clearTarget,
+        label: `Clear ${clearTarget} tiles`,
       },
     ];
   } else {
+    // -------------------------
+    // NORMAL LEVELS
+    // -------------------------
+
     objectives = [
       {
         type: "score",
         target: targetScore,
         label: `Reach ${targetScore.toLocaleString()} points`,
       },
-      {
-        type: "special",
-        target: 6,
-        label: "Activate 6 special tiles",
-      },
-      {
-        type: "clear",
-        target: 60 + level,
-        label: `Clear ${60 + level} tiles`,
-      },
     ];
   }
+
+  // =========================
+  // RETURN LEVEL
+  // =========================
 
   return {
     level,
@@ -169,6 +168,10 @@ const createLevel = (level) => {
     objectives,
   };
 };
+
+// =========================
+// GENERATE 50 LEVELS
+// =========================
 
 export const levels = Array.from(
   { length: 50 },
