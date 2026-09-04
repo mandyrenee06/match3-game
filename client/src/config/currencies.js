@@ -2,7 +2,6 @@
 // NEHXIFY CURRENCY SYSTEM
 // =========================
 
-// 100 coins = $1
 export const COINS_PER_USD = 647;
 
 

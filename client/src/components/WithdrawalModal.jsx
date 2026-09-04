@@ -5,10 +5,6 @@ import {
   currencies,
   NO_DECIMAL_CURRENCIES,
 } from "../config/currencies";
-import {
-  addTransaction,
-  TRANSACTION_TYPES,
-} from "../config/transactionHistory";
 import { withdrawalLimits } from "../config/withdrawalLimits";
 
 const countryCurrencies = {
@@ -37,8 +33,11 @@ function WithdrawalModal({
   const [country, setCountry] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [accountType, setAccountType] = useState("");
   const [withdrawalAmount, setWithdrawalAmount] =
     useState("");
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   if (!isOpen) {
     return null;
@@ -67,14 +66,15 @@ function WithdrawalModal({
     coinsRequested > 0
       ? coinsToUsd(coinsRequested)
       : 0;
-  
+
   const selectedWithdrawalLimit =
     withdrawalLimits[country];
 
   const belowWithdrawalMinimum =
     coinsRequested > 0 &&
     selectedWithdrawalLimit &&
-    coinsRequested < selectedWithdrawalLimit.minimumCoins;
+    coinsRequested <
+      selectedWithdrawalLimit.minimumCoins;
 
   const localAmount =
     selectedCurrencyCode && usdAmount > 0
@@ -94,7 +94,8 @@ function WithdrawalModal({
     coinsRequested <= coinBalance &&
     country &&
     fullName.trim() &&
-    username.trim();
+    username.trim() &&
+    accountType;
 
   // -------------------------
   // FORMAT LOCAL CURRENCY
@@ -120,11 +121,24 @@ function WithdrawalModal({
   // SUBMIT WITHDRAWAL
   // -------------------------
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
     if (coinsRequested <= 0) {
-      alert("Please enter a valid withdrawal amount.");
+      alert(
+        "Please enter a valid withdrawal amount."
+      );
+      return;
+    }
+
+    if (!Number.isInteger(coinsRequested)) {
+      alert(
+        "Withdrawal amount must be a whole number of coins."
+      );
       return;
     }
 
@@ -158,87 +172,67 @@ function WithdrawalModal({
       return;
     }
 
-    // Current date and time
-    const requestedAt = new Date();
+    if (!accountType) {
+      alert("Please select your payout method.");
+      return;
+    }
 
-const withdrawalData = {
-  country,
-  currency: selectedCurrencyCode,
-  fullName: fullName.trim(),
-  username: username.trim(),
-  coinsRequested,
-  usdAmount,
-  localAmount,
-  requestedAt: requestedAt.toISOString(),
-  status: "pending",
-};
+    setIsSubmitting(true);
 
-console.log(
-  "Withdrawal request:",
-  withdrawalData
-);
+    try {
+      // -------------------------
+      // SEND TO BACKEND
+      // -------------------------
 
-// Deduct coins from the game wallet
-const withdrawalResult =
-  onWithdraw(coinsRequested);
+      const withdrawalResult =
+        await onWithdraw(
+          coinsRequested,
+          accountType
+        );
 
-if (!withdrawalResult?.success) {
-  alert(
-    withdrawalResult?.message ||
-    "Withdrawal could not be processed."
-  );
+      if (!withdrawalResult?.success) {
+        alert(
+          withdrawalResult?.message ||
+          "Withdrawal could not be processed."
+        );
 
-  return;
-}
+        return;
+      }
 
-// Record withdrawal in transaction history
-addTransaction({
-  type: TRANSACTION_TYPES.WITHDRAWAL,
-  coins: -coinsRequested,
-  amount: localAmount,
-  currency: selectedCurrencyCode,
-  status: "pending",
-  description: "Withdrawal request",
-  metadata: {
-    country,
-    fullName: fullName.trim(),
-    username: username.trim(),
-    coinsRequested,
-    usdAmount,
-    localAmount,
-    requestedAt: requestedAt.toISOString(),
-  },
-});
+      // -------------------------
+      // SUCCESS
+      // -------------------------
 
-// Save withdrawal request locally for now
-const existingWithdrawals =
-  JSON.parse(
-    localStorage.getItem(
-      "nehxifyWithdrawalRequests"
-    )
-  ) || [];
+      alert(
+        "Withdrawal request submitted successfully. Your request is now pending manual processing."
+      );
 
-existingWithdrawals.push(
-  withdrawalData
-);
+      // -------------------------
+      // RESET FORM
+      // -------------------------
 
-localStorage.setItem(
-  "nehxifyWithdrawalRequests",
-  JSON.stringify(existingWithdrawals)
-);
+      setCountry("");
+      setFullName("");
+      setUsername("");
+      setAccountType("");
+      setWithdrawalAmount("");
 
-alert(
-  "Withdrawal request submitted successfully. Your request is now pending manual processing."
-);
+      onClose();
 
-// Reset form
-setCountry("");
-setFullName("");
-setUsername("");
-setWithdrawalAmount("");
+    } catch (error) {
+      console.error(
+        "Withdrawal submission error:",
+        error
+      );
 
-onClose();
-}
+      alert(
+        "Something went wrong while submitting your withdrawal. Please try again."
+      );
+
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="modal-overlay">
@@ -250,6 +244,7 @@ onClose();
         <button
           className="close-modal"
           onClick={onClose}
+          disabled={isSubmitting}
         >
           ×
         </button>
@@ -292,6 +287,7 @@ onClose();
                 setCountry(event.target.value)
               }
               required
+              disabled={isSubmitting}
             >
 
               <option value="">
@@ -375,6 +371,7 @@ onClose();
                 setFullName(event.target.value)
               }
               required
+              disabled={isSubmitting}
             />
 
           </div>
@@ -396,7 +393,78 @@ onClose();
                 setUsername(event.target.value)
               }
               required
+              disabled={isSubmitting}
             />
+
+          </div>
+
+          {/* PAYOUT METHOD */}
+
+          <div className="form-group">
+
+            <label htmlFor="withdrawal-account-type">
+              Withdrawal Network
+            </label>
+
+            <select
+              id="withdrawal-account-type"
+              value={accountType}
+              onChange={(event) =>
+                setAccountType(event.target.value)
+              }
+              required
+              disabled={isSubmitting}
+            >
+
+              <option value="">
+                Select payout method
+              </option>
+
+              <option value="mpesa">
+                M-Pesa
+              </option>
+
+              <option value="airtel money">
+                Airtel Money
+              </option>
+
+              <option value="Tigo">
+                Tigo
+              </option>
+
+              <option value="mtn">
+                MTN
+              </option>
+
+              <option value="vodafone">
+                Vodafone
+              </option>
+
+              <option value="vodacom">
+                Vodacom
+              </option>
+
+              <option value="TNM mpamba">
+                TNM Mpamba
+              </option>
+
+              <option value="orange">
+                Orange
+              </option>
+
+              <option value="mukuru">
+                Mukuru
+              </option>
+
+              <option value="paypal">
+                PayPal
+              </option>
+
+              <option value="bank account">
+                Bank Account
+              </option>
+
+            </select>
 
           </div>
 
@@ -411,8 +479,9 @@ onClose();
             <input
               id="withdrawal-amount"
               type="number"
+              min="1"
               max={coinBalance}
-              step="100"
+              step="1"
               placeholder="e.g. 1000"
               value={withdrawalAmount}
               onChange={(event) =>
@@ -421,6 +490,7 @@ onClose();
                 )
               }
               required
+              disabled={isSubmitting}
             />
 
           </div>
@@ -467,6 +537,8 @@ onClose();
             </div>
           )}
 
+          {/* MINIMUM WITHDRAWAL WARNING */}
+
           {belowWithdrawalMinimum && (
             <p className="withdrawal-warning">
               ⚠️ {selectedWithdrawalLimit?.label}
@@ -478,9 +550,14 @@ onClose();
           <button
             type="submit"
             className="submit-payment"
-            disabled={!canWithdraw}
+            disabled={
+              !canWithdraw ||
+              isSubmitting
+            }
           >
-            💸 Request Withdrawal
+            {isSubmitting
+              ? "⏳ Processing..."
+              : "💸 Request Withdrawal"}
           </button>
 
         </form>
